@@ -49,7 +49,7 @@ Yes. It only does what you could do by hand, and it follows the scripting rule o
 
 • It only reads a newsletter YOU open. The script never opens, loads, fetches or scans your mailbox or any other mail. When you open a faction newsletter yourself on the Messages page, it reads that one mail, which is already on your screen.
 • It makes no requests at all. There is no API call and no page request to Torn or anywhere else. It copies the settings code from the text in front of you, exactly as if you had copied and pasted it into the script's Import box.
-• Nothing leaves your device. Only the settings code is used. The rest of the mail, the sender and your other messages are never stored, read further or sent anywhere. The imported CPR rules are saved only in your own userscript manager.
+• Nothing leaves your device. Only the settings code is used, plus the sender's name and player ID for the "imported from…" line, kept locally. The rest of the mail and your other messages are never stored, read further or sent anywhere. The imported CPR rules are saved only in your own userscript manager.
 • It doesn't act on Torn. Importing rules only changes how the crimes page looks for you (colours, labels, greyed-out Join buttons). It never clicks, joins or submits anything.
 • Only genuine faction newsletters are trusted. The script checks for Torn's own "This is a newsletter from your faction:" line, which can't be typed into an ordinary mail, so random mails can't change your rules.
 • You stay in control. Every import shows a "What changed" notice with an Undo button, and you can remove the rules at any time in the member menu.

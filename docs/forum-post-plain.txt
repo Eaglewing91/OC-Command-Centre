@@ -42,7 +42,7 @@ OC Command Centre only uses the Torn API and the page you're viewing. It never c
 Yes. It only does what you could do by hand, and follows the rule of "the API or a page you have loaded manually and are currently viewing".
 ◆ It only reads a newsletter you open. It never opens, fetches or scans your mailbox or any other mail.
 ◆ It makes no requests at all, to Torn or anywhere else. It copies the settings code from the text on your screen, exactly like pasting it into the Import box yourself.
-◆ Nothing leaves your device. Only the settings code is used; the rest of the mail, the sender and your other messages are never stored or sent.
+◆ Nothing leaves your device. Only the settings code is used, plus the sender's name and player ID for the "imported from…" line, kept locally; the rest of the mail and your other messages are never stored or sent.
 ◆ It doesn't act on Torn. Imported rules only change how the crimes page looks for you.
 ◆ Only genuine faction newsletters are trusted. Torn's own "This is a newsletter from your faction:" line is required, and it can't be typed into an ordinary mail.
 ◆ You stay in control. Every import shows "What changed" with Undo, and you can remove the rules at any time.

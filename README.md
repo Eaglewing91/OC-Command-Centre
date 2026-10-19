@@ -112,7 +112,7 @@ Yes. It only reads a faction newsletter **you open yourself**, using the page yo
 
 - **It only reads a newsletter you open.** It never opens, fetches or scans your mailbox or any other mail.
 - **It makes no requests**, to Torn or anywhere else. It takes the settings code from the text on screen, exactly like copying and pasting it into the Import box.
-- **Nothing leaves your device.** Only the settings code is used; the rest of the mail, the sender and your other messages are never stored or sent anywhere. The rules are saved in your userscript manager.
+- **Nothing leaves your device.** Only the settings code is used, plus the sender's name and player ID for the "imported from…" line, kept locally; the rest of the mail and your other messages are never stored or sent anywhere. The rules are saved in your userscript manager.
 - **It doesn't act on Torn.** Imported rules only change how the crimes page looks for you. It never clicks, joins or submits anything.
 - **Only genuine faction newsletters are trusted.** Torn's own "This is a newsletter from your faction:" line is required, and it can't be typed into an ordinary mail.
 - **You stay in control.** Every import shows a "What changed" notice with **Undo**, and you can remove the rules at any time in the member menu.

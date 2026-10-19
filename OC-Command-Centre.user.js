@@ -41,7 +41,7 @@
 // for you and makes no non-API requests to Torn. Only API calls run on a timer.
 // Newsletter auto-import only reads a faction newsletter you open yourself on
 // messages.php (the page you are viewing). It makes no requests, reads no other
-// mail, and keeps only the settings code, saved locally.
+// mail, and keeps only the settings code and the sender's name/ID, saved locally.
 //
 // Terms of Service
 // - Data Storage: Only locally. Key, settings, CPR rules, hidden members, price
