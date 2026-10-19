@@ -23,10 +23,6 @@
 
 <p>No faction's rules are built in, so it works for <b>any faction in Torn</b>.</p>
 
-<p><b><span style="font-size:16px">Install</span></b></p>
-<p><a href="https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/OC-Command-Centre.user.js">Click here to install</a> (Tampermonkey, Violentmonkey or Torn PDA)<br>
-Guide, screenshots and source: <a href="https://github.com/Eaglewing91/OC-Command-Centre">github.com/Eaglewing91/OC-Command-Centre</a></p>
-
 <p><b><span style="font-size:16px">For every member</span></b> <i>(no API key needed)</i></p>
 <ul>
 <li><b>CPR colours on every role:</b> green = you qualify, red = too low, orange = too high. Missing items and wrong-CPR members are highlighted too.</li>
@@ -59,6 +55,20 @@ Guide, screenshots and source: <a href="https://github.com/Eaglewing91/OC-Comman
 <p style="text-align:center"><img src="https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/report-overview.png" alt="Report overview" style="max-width:100%;width:720px"><br><i>Report overview</i></p>
 
 
+<p><b><span style="font-size:16px">Scripting rules</span></b></p>
+<p>OC Command Centre only uses the Torn API and the page you're viewing. It never clicks, joins, leaves or submits anything for you, and makes no non-API requests to Torn. Only API calls run on a timer. A greyed-out Join button simply stops your own click, so no request is sent.</p>
+
+<p><b><span style="font-size:16px">Is the newsletter auto-import allowed?</span></b></p>
+<p><b>Yes.</b> It only does what you could do by hand, and follows the rule of "the API or a page you have loaded manually and are currently viewing".</p>
+<ul>
+<li><b>It only reads a newsletter you open.</b> It never opens, fetches or scans your mailbox or any other mail.</li>
+<li><b>It makes no requests at all,</b> to Torn or anywhere else. It copies the settings code from the text on your screen, exactly like pasting it into the Import box yourself.</li>
+<li><b>Nothing leaves your device.</b> Only the settings code is used; the rest of the mail, the sender and your other messages are never stored or sent. The rules are saved in your own userscript manager.</li>
+<li><b>It doesn't act on Torn.</b> Imported rules only change how the crimes page looks for you.</li>
+<li><b>Only genuine faction newsletters are trusted.</b> Torn's own "This is a newsletter from your faction:" line is required, and it can't be typed into an ordinary mail.</li>
+<li><b>You stay in control.</b> Every import shows "What changed" with Undo, and you can remove the rules at any time.</li>
+</ul>
+
 <p><b><span style="font-size:16px">API key</span></b></p>
 <ul>
 <li><b>Regular members do not need a key.</b></li>
@@ -75,19 +85,9 @@ Guide, screenshots and source: <a href="https://github.com/Eaglewing91/OC-Comman
 <li><b>Key Access Level:</b> Custom – Minimal with Faction API access (faction basic, members, crimes; torn items).</li>
 </ul>
 
-<p><b><span style="font-size:16px">Scripting rules</span></b></p>
-<p>OC Command Centre only uses the Torn API and the page you're viewing. It never clicks, joins, leaves or submits anything for you, and makes no non-API requests to Torn. Only API calls run on a timer. A greyed-out Join button simply stops your own click, so no request is sent.</p>
-
-<p><b><span style="font-size:16px">Is the newsletter auto-import allowed?</span></b></p>
-<p><b>Yes.</b> It only does what you could do by hand, and follows the rule of "the API or a page you have loaded manually and are currently viewing".</p>
-<ul>
-<li><b>It only reads a newsletter you open.</b> It never opens, fetches or scans your mailbox or any other mail.</li>
-<li><b>It makes no requests at all,</b> to Torn or anywhere else. It copies the settings code from the text on your screen, exactly like pasting it into the Import box yourself.</li>
-<li><b>Nothing leaves your device.</b> Only the settings code is used; the rest of the mail, the sender and your other messages are never stored or sent. The rules are saved in your own userscript manager.</li>
-<li><b>It doesn't act on Torn.</b> Imported rules only change how the crimes page looks for you.</li>
-<li><b>Only genuine faction newsletters are trusted.</b> Torn's own "This is a newsletter from your faction:" line is required, and it can't be typed into an ordinary mail.</li>
-<li><b>You stay in control.</b> Every import shows "What changed" with Undo, and you can remove the rules at any time.</li>
-</ul>
+<p><b><span style="font-size:16px">Install</span></b></p>
+<p><a href="https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/OC-Command-Centre.user.js">Click here to install</a> (Tampermonkey, Violentmonkey or Torn PDA)<br>
+Guide, screenshots and source: <a href="https://github.com/Eaglewing91/OC-Command-Centre">github.com/Eaglewing91/OC-Command-Centre</a></p>
 
 <p><b><span style="font-size:16px">Credits</span></b></p>
 <p>Created by <b>Eaglewing [571041]</b>.<br>

@@ -5,11 +5,6 @@ The all-in-one organized crime toolkit for factions, built for any faction in To
 
 Every member gets CPR colours, a status bar and smart Join blocking on the crimes page. Leaders get a live OC dashboard, reports, item costs and OC BREACH alerts, and can push CPR rules to the whole faction with a single newsletter. No faction's rules are built in.
 
-INSTALL
-https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/OC-Command-Centre.user.js
-Works with Tampermonkey, Violentmonkey and Torn PDA.
-Full guide, screenshots and source: https://github.com/Eaglewing91/OC-Command-Centre
-
 
 FOR EVERY MEMBER (no API key needed)
 • CPR colours on every role: green = you qualify, red = too low, orange = too high. Missing items and wrong-CPR members are highlighted too.
@@ -19,11 +14,13 @@ FOR EVERY MEMBER (no API key needed)
 • Role weights from Torn Probability.
 • Rules update themselves: open your faction's newsletter and the new CPR rules import instantly, with a "What changed" summary and Undo.
 
+
 SCREENSHOTS (members)
 Crimes page: https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/crimes-page.png
 Status bar & Join reasons: https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/status-bar.png
 Member menu: https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/member-menu.png
 Newsletter import: https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/newsletter-import.png
+
 
 FOR LEADERS (Faction API access)
 • Live overview: who's not in an OC, open slots, what needs attention, missing items, members in hospital or travelling, possible early joins. Mail and Hide buttons on every free member.
@@ -43,19 +40,6 @@ Settings code & newsletter: https://raw.githubusercontent.com/Eaglewing91/OC-Com
 Report overview: https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/report-overview.png
 
 
-API KEY
-Regular members do NOT need a key.
-Leaders: Minimal key (or custom: faction basic, members, crimes; torn items) from a position with Faction API access. The key is stored only in your userscript manager and sent only to api.torn.com.
-
-
-TERMS OF SERVICE
-Data Storage: Only locally (userscript manager / your browser). Nothing is stored elsewhere.
-Data Sharing: Nobody. Role weights are downloaded from tornprobability.com without sending anything about you. Optional, off by default: if a leader turns on Estimated success, OC names and slot pass rates are sent to tornprobability.com.
-Purpose of Use: Non-malicious statistical analysis / public community tools (faction OC management and item cost audit).
-Key Storage & Sharing: Stored / used only for automation (live refresh and breach checks). Kept locally, sent only to api.torn.com.
-Key Access Level: Custom – Minimal with Faction API access (faction basic, members, crimes; torn items).
-
-
 SCRIPTING RULES
 Only uses the Torn API and the page you're viewing. It never clicks, joins, leaves or submits anything for you, and makes no non-API requests to Torn. Only API calls run on a timer. A greyed-out Join button simply stops your own click, so no request is sent.
 
@@ -71,6 +55,25 @@ Yes. It only does what you could do by hand, and it follows the scripting rule o
 • You stay in control. Every import shows a "What changed" notice with an Undo button, and you can remove the rules at any time in the member menu.
 
 In short: you open the newsletter, and the script reads the code on the page you're looking at. It's the automatic version of copy and paste, with no extra requests.
+
+
+API KEY
+Regular members do NOT need a key.
+Leaders: Minimal key (or custom: faction basic, members, crimes; torn items) from a position with Faction API access. The key is stored only in your userscript manager and sent only to api.torn.com.
+
+
+TERMS OF SERVICE
+Data Storage: Only locally (userscript manager / your browser). Nothing is stored elsewhere.
+Data Sharing: Nobody. Role weights are downloaded from tornprobability.com without sending anything about you. Optional, off by default: if a leader turns on Estimated success, OC names and slot pass rates are sent to tornprobability.com.
+Purpose of Use: Non-malicious statistical analysis / public community tools (faction OC management and item cost audit).
+Key Storage & Sharing: Stored / used only for automation (live refresh and breach checks). Kept locally, sent only to api.torn.com.
+Key Access Level: Custom – Minimal with Faction API access (faction basic, members, crimes; torn items).
+
+
+INSTALL
+https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/OC-Command-Centre.user.js
+Works with Tampermonkey, Violentmonkey and Torn PDA.
+Full guide, screenshots and source: https://github.com/Eaglewing91/OC-Command-Centre
 
 
 CREDITS
