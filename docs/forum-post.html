@@ -3,99 +3,71 @@
 <title>OC Command Centre forum post</title>
 <style>
   body { margin: 0; background: #e9ebee; font: 14px/1.5 Arial, Helvetica, sans-serif; color: #222; }
-  .bar { position: sticky; top: 0; background: #2b2f36; color: #fff; padding: 10px 16px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .bar { position: sticky; top: 0; background: #2b2f36; color: #fff; padding: 10px 16px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; z-index: 2; }
   .bar button { background: #c8384f; color: #fff; border: 0; border-radius: 4px; padding: 7px 14px; font-weight: bold; cursor: pointer; }
   .bar span { font-size: 12px; opacity: .85; }
   .wrap { max-width: 760px; margin: 16px auto; padding: 0 16px; }
   .title { background: #fff; border-radius: 6px 6px 0 0; padding: 10px 16px; border-bottom: 1px solid #ddd; font-weight: bold; }
   #post { background: #fff; border-radius: 0 0 6px 6px; padding: 16px 20px 24px; }
+  #post p { margin: 0; }
+  #post img { max-width: 100%; height: auto; }
 </style></head>
 <body>
 <div class="bar"><button id="copy">Copy post</button><span id="msg">Copies the formatted post. Paste it into the Torn forum editor (Ctrl+V).</span></div>
 <div class="wrap">
 <div class="title">Thread title: [Script + PDA] OC Command Centre – CPR rules, Join blocking, live OC dashboard &amp; breach alerts</div>
 <div id="post">
-
-<p style="text-align:center"><b><span style="font-size:20px">OC Command Centre</span></b><br>
-<i>The all-in-one organized crime toolkit for factions · v4.0.0</i></p>
-
+<p><b>OC COMMAND CENTRE  –  v4.0.0</b><br><i>The all-in-one organized crime toolkit for factions</i></p>
+<p>&nbsp;</p>
 <p>Every member gets <b>CPR colours, a status bar and smart Join blocking</b> on the crimes page. Leaders get a <b>live OC dashboard, reports, item costs and OC BREACH alerts</b>, and can push CPR rules to the whole faction with a single newsletter.</p>
-
 <p>No faction's rules are built in, so it works for <b>any faction in Torn</b>.</p>
-
-<p><b><span style="font-size:16px">For every member</span></b> <i>(no API key needed)</i></p>
-<ul>
-<li><b>CPR colours on every role:</b> green = you qualify, red = too low, orange = too high. Missing items and wrong-CPR members are highlighted too.</li>
-<li><b>A status bar on every OC:</b> OK TO JOIN / WAIT / START NEW / YOUR OC / DO NOT JOIN, a colour-coded stall timer and LAST JOIN.</li>
-<li><b>Join buttons that tell you why</b> they're greyed out, e.g. "Needs 73 · you have 70" or "Hidden crime".</li>
-<li><b>Hidden crimes:</b> OCs your faction doesn't run are removed from the list.</li>
-<li><b>Role weights</b> from Torn Probability.</li>
-<li><b>Rules update themselves:</b> open your faction's newsletter and the new CPR rules import instantly, with a "What changed" summary and Undo.</li>
-</ul>
-<p style="text-align:center"><img src="https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/crimes-page.png" alt="The crimes page: CPR colours, status bars, Join reasons, your own OC and a hidden crime" style="max-width:100%;width:720px"><br><i>The crimes page: CPR colours, status bars, Join reasons, your own OC and a hidden crime</i></p>
-<p style="text-align:center"><img src="https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/status-bar.png" alt="Status bar, stall timer, LAST JOIN and a greyed-out role with its reason" style="max-width:100%;width:640px"><br><i>Status bar, stall timer, LAST JOIN and a greyed-out role with its reason</i></p>
-<p style="text-align:center"><img src="https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/member-menu.png" alt="The member menu: imported rules, confirmation and manual import" style="max-width:100%;width:560px"><br><i>The member menu: imported rules, confirmation and manual import</i></p>
-<p style="text-align:center"><img src="https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/newsletter-import.png" alt="Rules imported from a faction newsletter, with What changed and Undo" style="max-width:100%;width:440px"><br><i>Rules imported from a faction newsletter, with "What changed" and Undo</i></p>
-
-
-<p><b><span style="font-size:16px">For leaders</span></b> <i>(Faction API access)</i></p>
-<ul>
-<li><b>Live overview:</b> who's not in an OC, open slots, what needs attention, missing items, members in hospital or travelling, possible early joins, with Mail and Hide buttons.</li>
-<li><b>Estimated success</b> on every crime, even ones still recruiting (optional).</li>
-<li><b>OC BREACH alerts</b> anywhere in Torn: wrong CPR, a hidden crime joined, or a missing item / unavailable member on an OC starting within the hour.</li>
-<li><b>Reports</b> for any period: completed OCs, participation, item costs and an activity log, with CSV exports.</li>
-<li><b>CPR settings editor:</b> per-role minimums and maximums, "no max in the last 48h", hidden crimes and an optional joining policy.</li>
-<li><b>One click</b> generates a settings code and a ready-to-send faction newsletter.</li>
-</ul>
-<p style="text-align:center"><img src="https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/live-overview.png" alt="The leader dashboard: live overview" style="max-width:100%;width:720px"><br><i>The leader dashboard: live overview</i></p>
-<p style="text-align:center"><img src="https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/crimes-table.png" alt="Crimes table with Estimated success and issues" style="max-width:100%;width:720px"><br><i>Crimes table with Estimated success and issues</i></p>
-<p style="text-align:center"><img src="https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/oc-breach.png" alt="An OC BREACH alert" style="max-width:100%;width:440px"><br><i>An OC BREACH alert</i></p>
-<p style="text-align:center"><img src="https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/cpr-settings.png" alt="CPR settings editor" style="max-width:100%;width:720px"><br><i>CPR settings editor</i></p>
-<p style="text-align:center"><img src="https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/settings-code.png" alt="Settings code and ready-to-send newsletter" style="max-width:100%;width:720px"><br><i>Settings code and ready-to-send newsletter</i></p>
-<p style="text-align:center"><img src="https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/report-overview.png" alt="Report overview" style="max-width:100%;width:720px"><br><i>Report overview</i></p>
-
-
-<p><b><span style="font-size:16px">Scripting rules</span></b></p>
+<p>&nbsp;</p>
+<p><b><u>FOR EVERY MEMBER (NO API KEY NEEDED)</u></b></p>
+<p>• <b>CPR colours on every role:</b> green = you qualify, red = too low, orange = too high. Missing items and wrong-CPR members are highlighted too.<br>• <b>A status bar on every OC:</b> OK TO JOIN / WAIT / START NEW / YOUR OC / DO NOT JOIN, a colour-coded stall timer and LAST JOIN.<br>• <b>Join buttons that tell you why</b> they're greyed out, e.g. "Needs 73 · you have 70" or "Hidden crime".<br>• <b>Hidden crimes:</b> OCs your faction doesn't run are removed from the list.<br>• <b>Role weights</b> from Torn Probability.<br>• <b>Rules update themselves:</b> open your faction's newsletter and the new CPR rules import instantly, with a "What changed" summary and Undo.</p>
+<p>&nbsp;</p>
+<p><img src="https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/crimes-page.png" alt="The crimes page: CPR colours, status bars, Join reasons, your own OC and a hidden crime" width="720"><br><i>The crimes page: CPR colours, status bars, Join reasons, your own OC and a hidden crime</i></p>
+<p>&nbsp;</p>
+<p><img src="https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/status-bar.png" alt="Status bar, stall timer, LAST JOIN and a greyed-out role with its reason" width="640"><br><i>Status bar, stall timer, LAST JOIN and a greyed-out role with its reason</i></p>
+<p>&nbsp;</p>
+<p><img src="https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/member-menu.png" alt="The member menu: imported rules, confirmation and manual import" width="560"><br><i>The member menu: imported rules, confirmation and manual import</i></p>
+<p>&nbsp;</p>
+<p><img src="https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/newsletter-import.png" alt="Rules imported from a faction newsletter, with What changed and Undo" width="440"><br><i>Rules imported from a faction newsletter, with What changed and Undo</i></p>
+<p>&nbsp;</p>
+<p><b><u>FOR LEADERS (FACTION API ACCESS)</u></b></p>
+<p>• <b>Live overview:</b> who's not in an OC, open slots, what needs attention, missing items, members in hospital or travelling, possible early joins, with Mail and Hide buttons.<br>• <b>Estimated success</b> on every crime, even ones still recruiting (optional).<br>• <b>OC BREACH alerts</b> anywhere in Torn: wrong CPR, a hidden crime joined, or a missing item / unavailable member on an OC starting within the hour.<br>• <b>Reports</b> for any period: completed OCs, participation, item costs and an activity log, with CSV exports.<br>• <b>CPR settings editor:</b> per-role minimums and maximums, "no max in the last 48h", hidden crimes and an optional joining policy.<br>• <b>One click</b> generates a settings code and a ready-to-send faction newsletter.</p>
+<p>&nbsp;</p>
+<p><img src="https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/live-overview.png" alt="The leader dashboard: live overview" width="720"><br><i>The leader dashboard: live overview</i></p>
+<p>&nbsp;</p>
+<p><img src="https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/crimes-table.png" alt="Crimes table with Estimated success and issues" width="720"><br><i>Crimes table with Estimated success and issues</i></p>
+<p>&nbsp;</p>
+<p><img src="https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/oc-breach.png" alt="An OC BREACH alert" width="440"><br><i>An OC BREACH alert</i></p>
+<p>&nbsp;</p>
+<p><img src="https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/cpr-settings.png" alt="CPR settings editor" width="720"><br><i>CPR settings editor</i></p>
+<p>&nbsp;</p>
+<p><img src="https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/settings-code.png" alt="Settings code and ready-to-send newsletter" width="720"><br><i>Settings code and ready-to-send newsletter</i></p>
+<p>&nbsp;</p>
+<p><img src="https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/report-overview.png" alt="Report overview" width="720"><br><i>Report overview</i></p>
+<p>&nbsp;</p>
+<p><b><u>SCRIPTING RULES</u></b></p>
 <p>OC Command Centre only uses the Torn API and the page you're viewing. It never clicks, joins, leaves or submits anything for you, and makes no non-API requests to Torn. Only API calls run on a timer. A greyed-out Join button simply stops your own click, so no request is sent.</p>
-
-<p><b><span style="font-size:16px">Is the newsletter auto-import allowed?</span></b></p>
+<p>&nbsp;</p>
+<p><b><u>IS THE NEWSLETTER AUTO-IMPORT ALLOWED?</u></b></p>
 <p><b>Yes.</b> It only does what you could do by hand, and follows the rule of "the API or a page you have loaded manually and are currently viewing".</p>
-<ul>
-<li><b>It only reads a newsletter you open.</b> It never opens, fetches or scans your mailbox or any other mail.</li>
-<li><b>It makes no requests at all,</b> to Torn or anywhere else. It copies the settings code from the text on your screen, exactly like pasting it into the Import box yourself.</li>
-<li><b>Nothing leaves your device.</b> Only the settings code is used; the rest of the mail, the sender and your other messages are never stored or sent. The rules are saved in your own userscript manager.</li>
-<li><b>It doesn't act on Torn.</b> Imported rules only change how the crimes page looks for you.</li>
-<li><b>Only genuine faction newsletters are trusted.</b> Torn's own "This is a newsletter from your faction:" line is required, and it can't be typed into an ordinary mail.</li>
-<li><b>You stay in control.</b> Every import shows "What changed" with Undo, and you can remove the rules at any time.</li>
-</ul>
-
-<p><b><span style="font-size:16px">API key</span></b></p>
-<ul>
-<li><b>Regular members do not need a key.</b></li>
-<li><b>Leaders:</b> Minimal key (or custom: faction basic, members, crimes; torn items) from a position with Faction API access.</li>
-<li>The key is stored only in your userscript manager and sent only to api.torn.com.</li>
-</ul>
-
-<p><b><span style="font-size:16px">Terms of Service</span></b></p>
-<ul>
-<li><b>Data Storage:</b> Only locally (userscript manager / your browser). Nothing is stored elsewhere.</li>
-<li><b>Data Sharing:</b> Nobody. Role weights are downloaded from tornprobability.com without sending anything about you. Optional, off by default: if a leader turns on Estimated success, OC names and slot pass rates are sent to tornprobability.com.</li>
-<li><b>Purpose of Use:</b> Non-malicious statistical analysis / public community tools (faction OC management and item cost audit).</li>
-<li><b>Key Storage &amp; Sharing:</b> Stored / used only for automation (live refresh and breach checks). Kept locally, sent only to api.torn.com.</li>
-<li><b>Key Access Level:</b> Custom – Minimal with Faction API access (faction basic, members, crimes; torn items).</li>
-</ul>
-
-<p><b><span style="font-size:16px">Install</span></b></p>
-<p><a href="https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/OC-Command-Centre.user.js">Click here to install</a> (Tampermonkey, Violentmonkey or Torn PDA)<br>
-Guide, screenshots and source: <a href="https://github.com/Eaglewing91/OC-Command-Centre">github.com/Eaglewing91/OC-Command-Centre</a></p>
-
-<p><b><span style="font-size:16px">Credits</span></b></p>
-<p>Created by <b>Eaglewing [571041]</b>.<br>
-With thanks to Flamer, Allenone, Verboten, Darrelia, Kohnago, pawl, Qfiffle, JohnNash, callmericky and whatdoesthespacebardo, whose earlier work this script builds on. Role weights and estimated success use Allenone's Torn Probability.<br>
-Licence: MIT.</p>
-
-<p style="text-align:center"><i>Feedback, bugs and ideas are welcome here or on <a href="https://github.com/Eaglewing91/OC-Command-Centre/issues">GitHub Issues</a>.</i></p>
-
+<p>• <b>It only reads a newsletter you open.</b> It never opens, fetches or scans your mailbox or any other mail.<br>• <b>It makes no requests at all,</b> to Torn or anywhere else. It copies the settings code from the text on your screen, exactly like pasting it into the Import box yourself.<br>• <b>Nothing leaves your device.</b> Only the settings code is used; the rest of the mail, the sender and your other messages are never stored or sent.<br>• <b>It doesn't act on Torn.</b> Imported rules only change how the crimes page looks for you.<br>• <b>Only genuine faction newsletters are trusted.</b> Torn's own "This is a newsletter from your faction:" line is required, and it can't be typed into an ordinary mail.<br>• <b>You stay in control.</b> Every import shows "What changed" with Undo, and you can remove the rules at any time.</p>
+<p>&nbsp;</p>
+<p><b><u>API KEY</u></b></p>
+<p>• <b>Regular members do not need a key.</b><br>• <b>Leaders:</b> Minimal key (or custom: faction basic, members, crimes; torn items) from a position with Faction API access.<br>• The key is stored only in your userscript manager and sent only to api.torn.com.</p>
+<p>&nbsp;</p>
+<p><b><u>TERMS OF SERVICE</u></b></p>
+<p>• <b>Data Storage:</b> Only locally (userscript manager / your browser). Nothing is stored elsewhere.<br>• <b>Data Sharing:</b> Nobody. Role weights are downloaded from tornprobability.com without sending anything about you. Optional, off by default: if a leader turns on Estimated success, OC names and slot pass rates are sent to tornprobability.com.<br>• <b>Purpose of Use:</b> Non-malicious statistical analysis / public community tools (faction OC management and item cost audit).<br>• <b>Key Storage &amp; Sharing:</b> Stored / used only for automation (live refresh and breach checks). Kept locally, sent only to api.torn.com.<br>• <b>Key Access Level:</b> Custom – Minimal with Faction API access (faction basic, members, crimes; torn items).</p>
+<p>&nbsp;</p>
+<p><b><u>INSTALL</u></b></p>
+<p><a href="https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/OC-Command-Centre.user.js"><b>Click here to install</b></a><br>Works with Tampermonkey, Violentmonkey and Torn PDA.<br>Guide, screenshots and source: <a href="https://github.com/Eaglewing91/OC-Command-Centre">github.com/Eaglewing91/OC-Command-Centre</a></p>
+<p>&nbsp;</p>
+<p><b><u>CREDITS</u></b></p>
+<p>Created by <b>Eaglewing [571041]</b>.<br>With thanks to Flamer, Allenone, Verboten, Darrelia, Kohnago, pawl, Qfiffle, JohnNash, callmericky and whatdoesthespacebardo, whose earlier work this script builds on. Role weights and estimated success use Allenone's Torn Probability.<br>Licence: MIT.</p>
+<p>&nbsp;</p>
+<p><i>Feedback, bugs and ideas are welcome here or on <a href="https://github.com/Eaglewing91/OC-Command-Centre/issues">GitHub Issues</a>.</i></p>
 </div></div>
 <script>
 document.getElementById('copy').addEventListener('click', async () => {
