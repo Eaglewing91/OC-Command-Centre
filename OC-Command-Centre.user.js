@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OC Command Centre
 // @namespace    https://www.torn.com/profiles.php?XID=571041
-// @version      4.0.0
+// @version      4.0.1
 // @description  Organized crime toolkit for Torn factions: CPR rules and Join blocking on the crimes page for every member, plus a live OC dashboard, reports, item costs and OC BREACH alerts for leaders.
 // @author       Eaglewing [571041]
 // @homepageURL  https://github.com/Eaglewing91/OC-Command-Centre
@@ -61,7 +61,7 @@
 
 (function () {
     'use strict';
-    const VERSION = '4.0.0';
+    const VERSION = '4.0.1';
     const NAME = 'OC Command Centre';
     // Local, per-userscript storage prefix. No API key is bundled in this file.
     const PREFIX = 'eaglewing_oc_command_centre_v1_';
@@ -452,7 +452,7 @@
             for (const s of slotRows) if (s.itemId) s.itemName = itemName(s.itemId);
             const missing = filled.filter(s => s.itemId && s.itemAvailable === false);
             if (missing.length) issue('item', 2, 'Missing item', missing.map(s => s.name + ' (' + s.role + '): ' + s.itemName));
-            const who = s => s.name + ' (' + s.role + ') ' + s.pass + '%';
+            const who = s => s.name + ' (' + s.role + ') ' + s.pass;
             if (requirement) {
                 const declined = filled.filter(s => s.req && s.req.min >= DECLINED_CPR);
                 const below = filled.filter(s => s.pass != null && s.req && s.req.min < DECLINED_CPR && s.pass < s.req.min);
@@ -536,9 +536,9 @@
                 if (s.req.min >= DECLINED_CPR) out.push({ ...base, type: 'declined', key: crime.id + ':' + s.userId + ':declined',
                     text: s.name + ' joined ' + crime.name + ' (' + s.role + '), a hidden crime' });
                 else if (s.pass != null && s.pass < s.req.min) out.push({ ...base, type: 'below', key: crime.id + ':' + s.userId + ':below',
-                    text: s.name + ' (' + s.role + ') ' + s.pass + '% in ' + crime.name + ', needs ' + s.req.min });
+                    text: s.name + ' (' + s.role + ') ' + s.pass + ' in ' + crime.name + ', needs ' + s.req.min });
                 else if (s.pass != null && s.req.max != null && s.pass > s.req.max) out.push({ ...base, type: 'above', key: crime.id + ':' + s.userId + ':above',
-                    text: s.name + ' (' + s.role + ') ' + s.pass + '% in ' + crime.name + ', max ' + s.req.max });
+                    text: s.name + ' (' + s.role + ') ' + s.pass + ' in ' + crime.name + ', max ' + s.req.max });
             }
         }
         return out;
@@ -1156,13 +1156,13 @@
         if (pass == null) return '<span class="muted">—</span>';
         if (!req) {
             const cls = pass < settings.lowPass ? 'value-lost' : pass <= 75 ? 'value-used' : 'value-good';
-            return '<span class="' + cls + '">' + pass + '%</span>';
+            return '<span class="' + cls + '">' + pass + '</span>';
         }
         const need = req.min >= DECLINED_CPR ? 'Hidden crime' : (req.min ? 'min ' + req.min : '') + (req.max != null ? (req.min ? ' · ' : '') + 'max ' + req.max : '')
             + (req.waived ? ' · max waived (<48h)' : '') + (req.source === 'default' ? ' (default)' : '');
         const bad = req.min >= DECLINED_CPR || pass < req.min, over = req.max != null && pass > req.max;
         const cls = !filled ? 'muted' : bad ? 'value-lost' : over ? 'value-used' : 'value-good';
-        return '<span class="' + cls + '">' + pass + '%</span><span class="secondary-cell">' + escape(need) + '</span>';
+        return '<span class="' + cls + '">' + pass + '</span><span class="secondary-cell">' + escape(need) + '</span>';
     }
     function sinceHTML(ts, warnHours, alertHours, emptyText) {
         if (!ts) return '<span class="value-lost">' + escape(emptyText) + '</span>';
@@ -1263,7 +1263,7 @@
                     '<td>' + (s.userId ? statusPill(s.memberState, s.memberStatus) : '') + '</td><td class="t-right">' + (s.progress != null ? s.progress + '%' : '<span class="muted">—</span>') + '</td>' +
                     '<td class="t-right">' + passHTML(s.pass, s.req, !!s.userId) + '</td><td>' + item + '</td></tr>';
             }).join('');
-            return main + '<tr class="detail-row"><td colspan="6"><table class="slot-table"><thead><tr><th>Role</th><th>Member</th><th>Status</th><th class="t-right">Planning</th><th class="t-right">Pass rate</th><th>Item</th></tr></thead><tbody>' + slots + '</tbody></table></td></tr>';
+            return main + '<tr class="detail-row"><td colspan="6"><table class="slot-table"><thead><tr><th>Role</th><th>Member</th><th>Status</th><th class="t-right">Planning</th><th class="t-right">CPR</th><th>Item</th></tr></thead><tbody>' + slots + '</tbody></table></td></tr>';
         }).join('') || '<tr><td class="empty-row" colspan="6">No crimes in this category.</td></tr>';
         tickTimers(root);
         renderIgnored();

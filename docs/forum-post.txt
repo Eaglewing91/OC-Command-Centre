@@ -1,6 +1,6 @@
 TITLE: [Script + PDA] OC Command Centre – CPR rules, Join blocking, live OC dashboard & breach alerts
 
-OC COMMAND CENTRE  –  v4.0.0
+OC COMMAND CENTRE  –  v4.0.1
 The all-in-one organized crime toolkit for factions, built for any faction in Torn.
 
 Every member gets CPR colours, a status bar and smart Join blocking on the crimes page. Leaders get a live OC dashboard, reports, item costs and OC BREACH alerts, and can push CPR rules to the whole faction with a single newsletter. No faction's rules are built in.
