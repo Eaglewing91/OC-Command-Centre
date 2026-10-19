@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OC Command Centre
 // @namespace    https://www.torn.com/profiles.php?XID=571041
-// @version      4.0.1
+// @version      4.0.2
 // @description  Organized crime toolkit for Torn factions: CPR rules and Join blocking on the crimes page for every member, plus a live OC dashboard, reports, item costs and OC BREACH alerts for leaders.
 // @author       Eaglewing [571041]
 // @homepageURL  https://github.com/Eaglewing91/OC-Command-Centre
@@ -61,7 +61,7 @@
 
 (function () {
     'use strict';
-    const VERSION = '4.0.1';
+    const VERSION = '4.0.2';
     const NAME = 'OC Command Centre';
     // Local, per-userscript storage prefix. No API key is bundled in this file.
     const PREFIX = 'eaglewing_oc_command_centre_v1_';
@@ -937,11 +937,15 @@
             liveRaw = { faction: { id: Number(main.basic?.id) || null, name: String(main.basic?.name || 'Faction') },
                 members: main.members, crimes: main.crimes, recent: Array.isArray(recent?.crimes) ? recent.crimes : [] };
             liveFetchedAt = Date.now();
-            await ensureItemNames(main.crimes);
             recomputeLive();
             save('breachCheckAt', Date.now()).catch(() => {});
-            handleBreaches(live);
             updateChances();
+            // Item names load in the background so the dashboard shows straight away;
+            // breach alerts wait for them so they can name the missing item.
+            ensureItemNames(main.crimes).catch(() => {}).then(() => {
+                if (liveRaw?.crimes !== main.crimes) return;
+                recomputeLive(); handleBreaches(live); renderLive(); renderCard();
+            });
         } catch (error) {
             liveError = safeError(error);
             if (accessLost(error)) revokeAccess('Your key no longer has faction API access, so OC Command Centre is locked.');
