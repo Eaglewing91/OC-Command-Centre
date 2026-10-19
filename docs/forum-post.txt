@@ -19,6 +19,12 @@ FOR EVERY MEMBER (no API key needed)
 • Role weights from Torn Probability.
 • Rules update themselves: open your faction's newsletter and the new CPR rules import instantly, with a "What changed" summary and Undo.
 
+SCREENSHOTS (members)
+Crimes page: https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/crimes-page.png
+Status bar & Join reasons: https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/status-bar.png
+Member menu: https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/member-menu.png
+Newsletter import: https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/newsletter-import.png
+
 FOR LEADERS (Faction API access)
 • Live overview: who's not in an OC, open slots, what needs attention, missing items, members in hospital or travelling, possible early joins. Mail and Hide buttons on every free member.
 • Estimated success on every crime, even ones still recruiting (optional).
@@ -26,6 +32,15 @@ FOR LEADERS (Faction API access)
 • Reports for any period: completed OCs, participation, item costs and an activity log, with CSV exports.
 • CPR settings editor: per-role minimums and maximums, "no max in the last 48h", hidden crimes and an optional joining policy.
 • One click generates a settings code and a ready-to-send faction newsletter.
+
+
+SCREENSHOTS (leaders)
+Live overview: https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/live-overview.png
+Crimes & estimated success: https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/crimes-table.png
+OC BREACH alert: https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/oc-breach.png
+CPR settings: https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/cpr-settings.png
+Settings code & newsletter: https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/settings-code.png
+Report overview: https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/docs/screenshots/report-overview.png
 
 
 API KEY
