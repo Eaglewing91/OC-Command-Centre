@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OC Command Centre
 // @namespace    https://www.torn.com/profiles.php?XID=571041
-// @version      4.0.2
+// @version      4.0.3
 // @description  Organized crime toolkit for Torn factions: CPR rules and Join blocking on the crimes page for every member, plus a live OC dashboard, reports, item costs and OC BREACH alerts for leaders.
 // @author       Eaglewing [571041]
 // @homepageURL  https://github.com/Eaglewing91/OC-Command-Centre
@@ -61,7 +61,7 @@
 
 (function () {
     'use strict';
-    const VERSION = '4.0.2';
+    const VERSION = '4.0.3';
     const NAME = 'OC Command Centre';
     // Local, per-userscript storage prefix. No API key is bundled in this file.
     const PREFIX = 'eaglewing_oc_command_centre_v1_';
@@ -2209,7 +2209,7 @@ button:hover { background:#d04258; }
             if (panelEl.dataset.occHidden) { panelEl.style.display = ''; delete panelEl.dataset.occHidden; }
             panelEl.classList.toggle('occ-declined-visible', declined);
             processOC(panelEl, onCompletedTab, playerName);
-            const hours = tracking && !isEmpty ? timeUntilNeededCached(panelEl) : null;
+            const hours = !isEmpty ? timeUntilNeededCached(panelEl) : null; // stall timer shows for everyone
             updateUrgentMarker(panelEl, hours);
             const hasMe = ocContainsPlayer(panelEl, playerName);
             panelEl.classList.toggle('occ-mine', hasMe);
@@ -2985,7 +2985,7 @@ tbody tr:last-child td { border-bottom:0; }
      <p><strong>Most factions do not use this. Leave it off</strong> unless your faction has a written rule about <em>when</em> members may join an OC, not just which CPR they need.</p>
      <div class="row"><label class="checkbox-label"><input id="cpr-policy" type="checkbox"> My faction uses a joining policy</label></div>
      <div id="cpr-policy-detail" hidden>
-      <p class="note" style="margin:8px 0 0">With the policy on, members get OK TO JOIN / WAIT / START NEW banners, stall timers, LAST JOIN and JOINED TOO EARLY warnings, and Join buttons are greyed out when joining would break the policy. Each OC also gets a <strong>Start this OC last</strong> option, and roles get an <strong>Exception</strong> column (that role may be joined whatever the policy says, if the CPR fits).</p>
+      <p class="note" style="margin:8px 0 0">With the policy on, members get OK TO JOIN / WAIT / START NEW banners, LAST JOIN and JOINED TOO EARLY warnings, and Join buttons are greyed out when joining would break the policy. Each OC also gets a <strong>Start this OC last</strong> option, and roles get an <strong>Exception</strong> column (that role may be joined whatever the policy says, if the CPR fits).</p>
       <div class="row"><label class="number-label"><input id="cpr-wait" type="number" min="0" max="9" step="1"> Wait limit</label></div>
       <p class="note" style="margin:6px 0 0">How many members in an OC can be sitting at 0% planning before others must <strong>WAIT</strong>. Example with 1: if one member hasn't started planning yet, the OC is still OK TO JOIN; if two haven't, new joiners are told to wait until someone starts.</p>
       <div class="row"><label class="number-label"><input id="cpr-scope" type="number" min="1" max="999" step="1" placeholder="Off"> Low-scope fallback: scope below (blank = off)</label></div>
@@ -3027,7 +3027,7 @@ tbody tr:last-child td { border-bottom:0; }
      <div class="row"><label class="checkbox-label"><input id="set-hide-declined" type="checkbox"> Hide crimes set to "Hide crime" while nobody has joined</label></div>
      <div class="row"><label class="checkbox-label"><input id="set-move-empty" type="checkbox"> Move empty OCs to the bottom of the list</label></div>
      <div class="settings-subheading">Joining policy</div>
-     <p class="note" style="margin:6px 0 0">A joining policy: join an OC only while few enough members have not started planning, prioritise stalled crimes, start new ones only when nothing qualifies, and an optional low-scope fallback. Your faction's settings code sets the numbers. Adds OK TO JOIN / WAIT / START NEW banners, stall timers, policy ordering, LAST JOIN and JOINED TOO EARLY warnings. Most factions do not follow these rules, so by default they are only used when your faction's settings code turns them on (leaders: CPR settings → Joining policy).</p>
+     <p class="note" style="margin:6px 0 0">A joining policy: join an OC only while few enough members have not started planning, prioritise stalled crimes, start new ones only when nothing qualifies, and an optional low-scope fallback. Your faction's settings code sets the numbers. Adds OK TO JOIN / WAIT / START NEW banners, policy ordering, LAST JOIN and JOINED TOO EARLY warnings. Most factions do not follow these rules, so by default they are only used when your faction's settings code turns them on (leaders: CPR settings → Joining policy).</p>
      <div class="row"><label class="number-label">Use joining policy <select id="set-joinpolicy" aria-label="Use joining policy"><option value="auto">As set by my faction's code</option><option value="on">Always</option><option value="off">Never</option></select></label><label class="number-label"><input id="set-scope" type="number" min="0" max="999" step="1" placeholder="Unknown"> Current OC scope</label> <span class="note">(only used by the low-scope fallback, if your faction's code turns it on; ask your OC admins)</span></div></div>
     <div class="settings-card section-card"><div class="eyebrow">Alerts</div><h2>OC breach alerts</h2><p>Checks your faction's open OCs in the background on any Torn page and shows an <strong>OC BREACH</strong> alert when a member breaks your CPR rules: below their role's minimum, above a maximum, or in a hidden OC (needs CPR rules). It can also warn about an OC due to start within the hour. Each alert shows once. Each check is one Torn API call, shared across all your open Torn tabs.</p>
      <div class="row"><label class="checkbox-label"><input id="set-breach" type="checkbox"> Show OC breach alerts</label></div>
