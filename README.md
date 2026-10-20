@@ -50,7 +50,7 @@ Updates install automatically through your userscript manager.
 
 ### Opening the menu
 
-- **Desktop:** Tampermonkey menu → **OC Command Centre / CPR settings**, or the **Open** button on the summary card above the crimes list.
+- **Desktop:** Tampermonkey menu → **OC Command Centre / CPR settings**, or the **Open** button on the slim summary card on the crimes list (top by default; bottom or off in Settings).
 - **Torn PDA:** the **Open** button on the crimes-page summary card. There is no userscript menu in Torn PDA.
 
 Members without dashboard access see the member menu. Leaders whose key passes the access check see the full dashboard.

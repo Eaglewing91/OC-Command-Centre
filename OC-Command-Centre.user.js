@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OC Command Centre
 // @namespace    https://www.torn.com/profiles.php?XID=571041
-// @version      4.0.3
+// @version      4.1.0
 // @description  Organized crime toolkit for Torn factions: CPR rules and Join blocking on the crimes page for every member, plus a live OC dashboard, reports, item costs and OC BREACH alerts for leaders.
 // @author       Eaglewing [571041]
 // @homepageURL  https://github.com/Eaglewing91/OC-Command-Centre
@@ -61,7 +61,7 @@
 
 (function () {
     'use strict';
-    const VERSION = '4.0.3';
+    const VERSION = '4.1.0';
     const NAME = 'OC Command Centre';
     // Local, per-userscript storage prefix. No API key is bundled in this file.
     const PREFIX = 'eaglewing_oc_command_centre_v1_';
@@ -73,7 +73,7 @@
     const LIVE_TTL = 60 * 1000;
     const COMPLETED_STATUSES = ['successful', 'failure', 'failed'];
     const DEFAULT_SETTINGS = { lowPass: 50, inactiveHours: 96, lastOcWarnHours: 24, lastOcAlertHours: 48,
-        ignored: [], successChance: false, crimesCard: true, autoRefresh: true,
+        ignored: [], successChance: false, cardPos: 'top', cardCompact: true, autoRefresh: true,
         breachAlerts: true, breachDesktop: false, breachMinutes: 5, breachItems: true, breachAway: true, launcherEverywhere: false, rules: null,
         onPage: true, hideDeclined: true, moveEmpty: true, joinPolicy: 'auto', blockJoins: true, tpWeights: true, scope: null };
 
@@ -990,13 +990,28 @@
             message((signal.aborted ? 'Cancelled.' : safeError(error)) + (report ? ' Showing a clearly marked partial report.' : ''), true);
         } finally { controller = null; setBusy(false); updateCrimeFilter(); render(); }
     }
-    function filtered() {
+    // The crime filter applies to the Item costs and Activity tabs (and their CSVs);
+    // the Overview always shows every crime in the period.
+    function filtered(byCrime = true) {
         if (!report) return { records: [], selectedCrimes: 0 };
         const result = makeRecords(report.crimes, report.range);
-        const owner = $('#owner').value, crime = $('#crime').value;
-        result.records = result.records.filter(r => (owner === 'all' || owner === r.owner)
-            && (crime === 'all' || crime === r.crime));
+        const crime = $('#crime').value;
+        if (byCrime && crime !== 'all') result.records = result.records.filter(r => r.crime === crime);
         return result;
+    }
+    // Ownership bar and legend. "Unknown owner" (Torn gave no owner) only shows when it occurs.
+    function ownershipHTML(records) {
+        const owners = { faction: 0, user: 0, unknown: 0 };
+        for (const rec of records) owners[rec.owner]++;
+        const total = records.length;
+        const fraction = type => total ? owners[type] * 100 / total : 0;
+        const kinds = [['faction', 'Faction-owned', 'ownership-faction'], ['user', 'Member-owned', 'ownership-member'], ['unknown', 'Unknown owner', 'ownership-unknown']]
+            .filter(([id]) => id !== 'unknown' || owners.unknown > 0);
+        return '<div class="ownership-bar" title="' + kinds.map(k => k[1]).join(' / ') + '">' +
+            kinds.map(([id, , color]) => '<span class="' + color + '" style="width:' + fraction(id) + '%"></span>').join('') + '</div>' +
+            '<div class="ownership-legend">' + kinds.map(([id, name, color]) => '<div class="legend-row"' + (id === 'unknown' ? ' title="Torn did not record who owned these items"' : '') +
+            '><span class="legend-name"><span class="legend-dot ' + color + '"></span>' + name + '</span><strong>' + owners[id].toLocaleString('en-US') +
+            ' <span class="muted">(' + fraction(id).toFixed(1) + '%)</span></strong></div>').join('') + '</div>';
     }
     function updateCrimeFilter() {
         const select = $('#crime');
@@ -1015,7 +1030,8 @@
     }
     const metricHTML = ([name, value, caption]) => '<div class="metric"><span>' + escape(name) + '</span><strong>' + escape(value) + '</strong><small>' + escape(caption) + '</small></div>';
     function render() {
-        const result = filtered(), rows = aggregate(result.records, info), t = totals(rows);
+        const result = filtered(), rows = aggregate(result.records, info);
+        const all = filtered(false), t = totals(aggregate(all.records, info)); // Overview: every crime
         const available = !!report;
         $('#exports').hidden = !available;
         $('#report-body').hidden = !available;
@@ -1035,7 +1051,7 @@
         $('#period').textContent = timeText(report.range.from) + ' → ' + timeText(report.range.to) + ' · fetched ' + new Date(report.fetchedAt).toISOString().replace('T', ' ').slice(0, 19) + ' TCT';
         const people = participation(report.crimes, report.range, report.members);
         $('#summary').innerHTML = [
-            ['Completed OCs', result.selectedCrimes, 'All completed OCs in range'],
+            ['Completed OCs', all.selectedCrimes, 'All completed OCs in range'],
             ['Members with no OC', people.filter(p => p.current && !p.total).length, 'Current members, this period'],
             ['Lost items', t.lost, 'Explicitly lost outcomes'],
             ['Total item cost', money(t.cost), t.unpriced ? t.unpriced + ' events excluded: unpriced' : 'Current market value'],
@@ -1047,26 +1063,15 @@
         if (result.undated) warnings.push(result.undated + ' crimes excluded because execution timestamps were missing.');
         if (result.incomplete) warnings.push(result.incomplete + ' crimes have missing or invalid slots. Item totals may be incomplete.');
         if (result.outside) warnings.push(result.outside + ' crimes outside the selected execution period were excluded.');
-        if (result.unknownConsumption) warnings.push(result.unknownConsumption + ' used item outcomes have unknown reusable status and are excluded from item cost calculations.');
-        if (result.missingOutcomeItemId) warnings.push(result.missingOutcomeItemId + ' used/lost item outcomes have no valid item ID and cannot be assigned to an item.');
+        if (all.unknownConsumption) warnings.push(all.unknownConsumption + ' used item outcomes have unknown reusable status and are excluded from item cost calculations.');
+        if (all.missingOutcomeItemId) warnings.push(all.missingOutcomeItemId + ' used/lost item outcomes have no valid item ID and cannot be assigned to an item.');
         if (t.unpriced) warnings.push(t.unpriced + ' lost/consumed items have no current price; their costs are excluded from the displayed subtotal.');
         if (report.priceWarning) warnings.push('Price lookup: ' + report.priceWarning);
         $('#warnings').textContent = warnings.map(w => '• ' + w).join('\n');
         $('#warnings').hidden = !warnings.length;
         $('#price-note').textContent = 'All completed OCs are counted, even those without item losses. Only LOST outcomes and USED non-reusable items contribute to item costs. Reusable used items, unused items, and unknown outcomes are excluded. Costs use current market values, not historical purchase prices. Owner and crime filters affect item costs, not the completed OC count.';
-        const owners = { faction: 0, user: 0, unknown: 0 };
-        for (const rec of result.records) owners[rec.owner]++;
-        const totalEvents = result.records.length;
-        const fraction = type => totalEvents ? owners[type] * 100 / totalEvents : 0;
-        $('#ownership').innerHTML = '<div class="ownership-bar" title="Faction / member / unknown ownership">' +
-            '<span class="ownership-faction" style="width:' + fraction('faction') + '%"></span>' +
-            '<span class="ownership-member" style="width:' + fraction('user') + '%"></span>' +
-            '<span class="ownership-unknown" style="width:' + fraction('unknown') + '%"></span></div>' +
-            '<div class="ownership-legend">' + [
-                ['faction', 'Faction-owned', 'ownership-faction'],
-                ['user', 'Member-owned', 'ownership-member'],
-                ['unknown', 'Unknown owner', 'ownership-unknown']
-            ].map(([id, name, color]) => '<div class="legend-row"><span class="legend-name"><span class="legend-dot ' + color + '"></span>' + name + '</span><strong>' + owners[id].toLocaleString('en-US') + ' <span class="muted">(' + fraction(id).toFixed(1) + '%)</span></strong></div>').join('') + '</div>';
+        $('#ownership').innerHTML = ownershipHTML(all.records);
+        $('#costs-ownership').innerHTML = ownershipHTML(result.records);
         rows.sort((a, b) => {
             const av = a[sortBy], bv = b[sortBy];
             if (av == null) return bv == null ? a.id - b.id : 1;
@@ -1514,7 +1519,8 @@
     }
     // Live API data is useful on the crimes page for the card and LAST JOIN banners.
     function pageWantsLive() { return cardWanted() || (onCrimesPage() && settings.onPage && !!document.querySelector('[data-oc-id]')); }
-    function cardWanted() { return (settings.crimesCard || !gmMenu) && onCrimesPage() && !!document.querySelector('[data-oc-id]'); }
+    // Torn PDA has no userscript menu, so there the card always shows (it opens settings).
+    function cardWanted() { return (settings.cardPos !== 'off' || !gmMenu) && onCrimesPage() && !!document.querySelector('[data-oc-id]'); }
     function placeCard() {
         if (!cardWanted()) { cardHost?.remove(); return; }
         const container = document.querySelector('[data-oc-id]')?.parentElement;
@@ -1536,27 +1542,49 @@ button:hover { background:#d04258; }
 .legend span { display:inline-flex; align-items:center; gap:5px; }
 .sw { width:11px; height:11px; border-radius:3px; border:1px solid #ffffff33; }
 .notice { margin-top:5px; color:#ffd297; font-size:11px; }
-</style><div class="card"><div><div class="title" id="title">${NAME}</div><div class="stats" id="stats"></div>
+.actions { display:flex; gap:6px; }
+button.ghost { background:transparent; border-color:#344050; color:#aab6c6; padding:6px 9px; }
+button.ghost:hover { background:#1e2733; }
+.card.compact { padding:5px 8px 5px 10px; }
+.card.compact .top { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 12px; }
+.card.compact .legend { display:none; }
+.card.compact button { padding:4px 9px; }
+</style><div class="card" id="card"><div><div class="top"><div class="title" id="title">${NAME}</div><div class="stats" id="stats"></div></div>
 <div class="legend" id="legend" hidden><span><i class="sw" style="background:rgba(23,116,19,.85)"></i>CPR fine</span><span><i class="sw" style="background:rgba(153,0,0,.85)"></i>CPR too low</span><span><i class="sw" style="background:rgba(200,130,0,.85)"></i>CPR too high</span><span><i class="sw" style="background:repeating-linear-gradient(-45deg,#000 0,#000 2px,#f0c828 2px,#f0c828 4px)"></i>Other player, wrong CPR</span><span><i class="sw" style="background:rgba(30,90,170,.85)"></i>Missing item</span></div>
-<div class="notice" id="notice" hidden></div></div><button id="open" type="button">Open</button></div>`;
+<div class="notice" id="notice" hidden></div></div><div class="actions"><button id="more" class="ghost" type="button"></button><button id="open" type="button">Open</button></div></div>`;
             cardRoot.getElementById('open').addEventListener('click', () => { currentView = 'live'; open(); });
+            cardRoot.getElementById('more').addEventListener('click', async () => { settings.cardCompact = !settings.cardCompact; await saveSettings(); renderCard(); });
         }
-        if (cardHost.nextElementSibling !== container || cardHost.parentElement !== container.parentElement) {
+        if (settings.cardPos === 'bottom' && gmMenu) {
+            if (cardHost.previousElementSibling !== container) container.parentElement.insertBefore(cardHost, container.nextSibling);
+        } else if (cardHost.nextElementSibling !== container) {
             container.parentElement.insertBefore(cardHost, container);
         }
         renderCard();
     }
     function renderCard() {
         if (!cardRoot) return;
+        // Compact (default): one slim line. Details adds the colour legend and notices.
+        const compact = settings.cardCompact;
+        cardRoot.getElementById('card').classList.toggle('compact', compact);
+        const more = cardRoot.getElementById('more');
+        more.textContent = compact ? '▾' : '▴';
+        more.title = compact ? 'Show details' : 'Hide details';
+        more.setAttribute('aria-label', more.title);
         cardRoot.getElementById('legend').hidden = !(settings.onPage && rulesActive(settings.rules) && !helperDetected);
         const notice = cardRoot.getElementById('notice');
-        notice.hidden = !helperDetected && rulesActive(settings.rules);
+        // The other-helper warning always shows; the no-rules hint moves into the compact line.
+        notice.hidden = helperDetected ? false : compact || rulesActive(settings.rules);
         notice.textContent = helperDetected ? 'Another OC helper script is running, so on-page colours and banners are paused. Disable it to use them here.'
             : !rulesActive(settings.rules) ? (hasAccess() ? 'No CPR rules yet: set them in CPR settings.' : 'No CPR rules yet: choose Settings and import the settings code from your faction.') : '';
         const stats = cardRoot.getElementById('stats');
         cardRoot.getElementById('title').textContent = hasAccess() ? NAME : 'OC CPR requirements';
         cardRoot.getElementById('open').textContent = hasAccess() ? 'Open' : 'Settings';
-        if (!hasAccess()) { stats.innerHTML = rulesActive(settings.rules) ? '<span class="muted">Slots are coloured by your faction\'s CPR rules' +  '.</span>' : ''; return; }
+        if (!hasAccess()) {
+            stats.innerHTML = rulesActive(settings.rules) ? '<span class="muted">' + (compact ? 'CPR rules active' : 'Slots are coloured by your faction\'s CPR rules.') + '</span>'
+                : compact ? '<span class="muted">No CPR rules yet</span>' : '';
+            return;
+        }
         if (!live) { stats.innerHTML = '<span class="muted">' + (liveError ? escape(liveError) : 'Loading live OC status…') + '</span>'; return; }
         const stalled = live.crimes.filter(c => c.issues.some(i => i.type === 'stalled')).length;
         const items = live.crimes.filter(c => c.issues.some(i => i.type === 'item')).length;
@@ -2440,7 +2468,7 @@ button.occ-join-disabled{filter:grayscale(1);opacity:0.45;cursor:not-allowed !im
     }
     function syncMemberPanel() {
         renderImportStatus(); $('#m-onpage').checked = settings.onPage; $('#m-weights').checked = settings.tpWeights;
-        $('#m-block').checked = settings.blockJoins; $('#m-hide-declined').checked = settings.hideDeclined; $('#m-move-empty').checked = settings.moveEmpty;
+        $('#m-block').checked = settings.blockJoins; $('#m-hide-declined').checked = settings.hideDeclined; $('#m-move-empty').checked = settings.moveEmpty; $('#m-card').value = settings.cardPos;
         $('#m-joinpolicy').value = settings.joinPolicy; $('#m-scope').value = getScope() ?? '';
     }
     function openMember() {
@@ -2508,6 +2536,7 @@ button.occ-join-disabled{filter:grayscale(1);opacity:0.45;cursor:not-allowed !im
         });
         root.querySelectorAll('[data-view-panel]').forEach(section => { section.hidden = section.dataset.viewPanel !== currentView; });
         $('#report-controls').hidden = !REPORT_VIEWS.includes(currentView);
+        $('#crime-field').hidden = !['costs', 'activity'].includes(currentView);
         $('#status').hidden = ['live', 'cpr'].includes(currentView);
         $('#report-state').hidden = !REPORT_VIEWS.includes(currentView);
         $('#live-state').hidden = currentView !== 'live';
@@ -2555,7 +2584,8 @@ button.occ-join-disabled{filter:grayscale(1);opacity:0.45;cursor:not-allowed !im
         return { lowPass: num(s.lowPass, 50, 0, 100), inactiveHours: num(s.inactiveHours, 96, 1, 2000),
             lastOcWarnHours: num(s.lastOcWarnHours, 24, 1, 2000), lastOcAlertHours: num(s.lastOcAlertHours, 48, 1, 2000),
             ignored: Array.isArray(s.ignored) ? s.ignored.filter(validId).map(Number) : [],
-            successChance: s.successChance === true, crimesCard: s.crimesCard !== false, autoRefresh: s.autoRefresh !== false,
+            successChance: s.successChance === true, autoRefresh: s.autoRefresh !== false,
+            cardPos: ['top', 'bottom', 'off'].includes(s.cardPos) ? s.cardPos : s.crimesCard === false ? 'off' : 'top', cardCompact: s.cardCompact !== false,
             breachAlerts: s.breachAlerts !== false, breachDesktop: s.breachDesktop === true, breachItems: s.breachItems !== false, breachAway: s.breachAway !== false,
             breachMinutes: num(s.breachMinutes, 5, 1, 60), launcherEverywhere: s.launcherEverywhere === true,
             onPage: s.onPage !== false, hideDeclined: s.hideDeclined !== false, moveEmpty: s.moveEmpty !== false,
@@ -2578,9 +2608,9 @@ button.occ-join-disabled{filter:grayscale(1);opacity:0.45;cursor:not-allowed !im
     }
     function metaColumns() {
         return [report.complete ? 'Complete' : 'PARTIAL', report.faction.id, report.faction.name,
-            timeText(report.range.from), timeText(report.range.to), $('#owner').value, $('#crime').value];
+            timeText(report.range.from), timeText(report.range.to), $('#crime').value];
     }
-    const metaHeaders = ['Report completeness', 'Faction ID', 'Faction', 'Range from TCT', 'Range to TCT', 'Owner filter', 'Crime filter'];
+    const metaHeaders = ['Report completeness', 'Faction ID', 'Faction', 'Range from TCT', 'Range to TCT', 'Crime filter'];
     function exportSummary() {
         if (!report) return;
         const rows = aggregate(filtered().records, info);
@@ -2738,6 +2768,8 @@ a.btn { text-decoration:none; }
 .error-box { padding:12px 15px; margin:0 0 16px; color:#ffb6b9; background:#351f2b; border:1px solid #7d3d49; border-radius:9px; font-size:11px; line-height:1.6; }
 .overview-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; }
 .info-card { padding:20px; min-width:0; }
+.costs-ownership { margin-bottom:16px; }
+.costs-ownership .ownership-legend { grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); }
 .info-card h2 { margin-bottom:11px; }
 .info-card p { margin-bottom:12px; color:#97a7b9; font-size:12px; line-height:1.8; }
 .inline-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:17px; }
@@ -2881,6 +2913,8 @@ tbody tr:last-child td { border-bottom:0; }
    <div class="row"><label class="checkbox-label"><input id="m-block" type="checkbox"> Grey out Join buttons I should not use</label></div>
    <div class="row"><label class="checkbox-label"><input id="m-hide-declined" type="checkbox"> Hide crimes my faction has hidden (while nobody has joined)</label></div>
    <div class="row"><label class="checkbox-label"><input id="m-move-empty" type="checkbox"> Move empty OCs to the bottom</label></div>
+   <div class="row"><label class="number-label">Summary card <select id="m-card" aria-label="Summary card position"><option value="top">Top of the list</option><option value="bottom">Bottom of the list</option><option value="off">Off</option></select></label></div>
+   <p class="note" style="margin:0 0 6px">Torn PDA has no userscript menu, so there the card stays at the top: it's how you open these settings.</p>
    <div class="row"><label class="number-label">Joining policy <select id="m-joinpolicy" aria-label="Joining policy"><option value="auto">As set by my faction's code</option><option value="on">Always</option><option value="off">Never</option></select></label><label class="number-label"><input id="m-scope" type="number" min="0" max="999" step="1" placeholder="Unknown"> Current OC scope</label> <span class="note">(only used by the low-scope fallback, if your faction's code turns it on; ask your OC admins)</span></div></div>
   <div class="settings-card section-card"><div class="eyebrow">Leaders</div><h2>OC Command Centre</h2><div class="key-warning"><strong>Regular members: you do not need an API key.</strong> CPR colours, Join blocking and newsletter imports all work without one. Leave this box empty.</div>
    <p>The full dashboard (live overview, reports, breach alerts and CPR editing) is only for faction leaders and officers.</p>
@@ -2946,7 +2980,7 @@ tbody tr:last-child td { border-bottom:0; }
     </div><div class="toolbar-primary"><button id="fetch" class="btn btn-primary btn-big" data-lock>Fetch report <span aria-hidden="true">↗</span></button><button id="cancel" class="btn btn-danger btn-big" hidden>Cancel fetch</button></div></div>
     <p class="toolbar-caption">UTC / Torn City Time · Presets include today · Each fetch reads the selected period afresh.</p>
     </section>
-    <section class="filter-strip section-card" aria-label="Data filters and exports"><div class="filter-set"><label class="field"><span class="field-label">Item owner</span><select id="owner"><option value="all">All owners</option><option value="faction">Faction-owned</option><option value="user">Member-owned</option><option value="unknown">Unknown owner</option></select></label><label class="field"><span class="field-label">Crime type</span><select id="crime"><option value="all">All crimes</option></select></label></div>
+    <section class="filter-strip section-card" aria-label="Data filters and exports"><div class="filter-set"><label class="field" id="crime-field"><span class="field-label">Crime type</span><select id="crime"><option value="all">All crimes</option></select></label></div>
     <div class="export-set" id="exports" hidden><span class="exports-label">Export</span><button id="export-participation" class="btn btn-outline" title="Export completed OCs per member">Participation CSV</button><button id="export-summary" class="btn btn-outline" title="Export item cost totals">Items CSV</button><button id="export-details" class="btn btn-outline" title="Export slot-level details">Details CSV</button></div></section>
    </div>
    <div id="status" class="status-bar" role="status" aria-live="polite" hidden><span class="status-icon" aria-hidden="true">i</span><span id="status-text">Choose a date range and fetch a report.</span></div>
@@ -2963,7 +2997,7 @@ tbody tr:last-child td { border-bottom:0; }
    <section id="participation-view" data-view-panel="participation" hidden><div class="table-card section-card"><div class="table-intro"><div><h2>Member participation</h2><p>Completed OCs per member in the report period. Current OC comes from the live overview.</p></div><span class="section-tag" id="part-count">0 members</span></div><div class="table-scroll"><table aria-label="Member participation"><thead><tr>
     <th class="sort-col" data-psort="name" aria-sort="none" tabindex="0">Member <span class="sort-arrow">↕</span></th><th class="sort-col t-right" data-psort="total" aria-sort="descending" tabindex="0">OCs <span class="sort-arrow">↓</span></th><th class="sort-col t-right" data-psort="success" aria-sort="none" tabindex="0">Successful <span class="sort-arrow">↕</span></th><th class="sort-col t-right" data-psort="fail" aria-sort="none" tabindex="0">Failed <span class="sort-arrow">↕</span></th><th class="sort-col t-right" data-psort="rate" aria-sort="none" tabindex="0">Success rate <span class="sort-arrow">↕</span></th><th class="sort-col" data-psort="last" aria-sort="none" tabindex="0">Last OC (TCT) <span class="sort-arrow">↕</span></th><th>Current OC</th>
     </tr></thead><tbody id="part-body"></tbody></table></div><div class="table-foot">Members who left during the period are shown as former members.</div></div></section>
-   <section id="costs-view" data-view-panel="costs" hidden><div class="table-card section-card"><div class="table-intro"><div><h2>Item cost breakdown</h2><p>Sort any column to compare depleted items, prices and replacement cost.</p></div><span class="section-tag" id="item-count">0 item types</span></div><div class="table-scroll"><table aria-label="Item cost breakdown"><thead><tr>
+   <section id="costs-view" data-view-panel="costs" hidden><section class="info-card section-card costs-ownership"><h2>Ownership breakdown</h2><p>Lost and consumed items by recorded ownership, for the crimes shown below.</p><div id="costs-ownership"></div></section><div class="table-card section-card"><div class="table-intro"><div><h2>Item cost breakdown</h2><p>Sort any column to compare depleted items, prices and replacement cost.</p></div><span class="section-tag" id="item-count">0 item types</span></div><div class="table-scroll"><table aria-label="Item cost breakdown"><thead><tr>
     <th class="sort-col" data-sort="name" aria-sort="none" tabindex="0">Item <span class="sort-arrow">↕</span></th><th class="sort-col t-right" data-sort="lost" aria-sort="none" tabindex="0">Lost <span class="sort-arrow">↕</span></th><th class="sort-col t-right" data-sort="consumed" aria-sort="none" tabindex="0">Consumed <span class="sort-arrow">↕</span></th><th class="sort-col t-right" data-sort="price" aria-sort="none" tabindex="0">Unit value <span class="sort-arrow">↕</span></th><th class="sort-col t-right" data-sort="cost" aria-sort="descending" tabindex="0">Total cost <span class="sort-arrow">↓</span></th><th class="sort-col t-right" data-sort="factionCost" aria-sort="none" tabindex="0">Faction cost <span class="sort-arrow">↕</span></th><th class="sort-col t-right" data-sort="crimes" aria-sort="none" tabindex="0">OCs <span class="sort-arrow">↕</span></th>
     </tr></thead><tbody id="items"></tbody></table></div><div class="table-foot">Unit prices are current estimates, not historical purchase prices.</div></div></section>
    <section id="activity-view" data-view-panel="activity" hidden><div class="table-card section-card"><div class="table-intro"><div><h2>OC item activity</h2><p>Every recorded loss or non-reusable item consumption, grouped by individual slot.</p></div><span class="section-tag">100 records / page</span></div><div class="table-scroll"><table aria-label="OC item activity"><thead><tr><th>Executed (TCT)</th><th>Organized crime</th><th>Slot / member</th><th>Item</th><th>Event</th><th>Owner</th><th>Notes</th></tr></thead><tbody id="details-body"></tbody></table></div><div class="table-foot"><span id="detail-count">0 records</span><div class="pager"><button id="prev" class="btn btn-outline">← Previous</button><button id="next" class="btn btn-outline">Next →</button></div></div></div></section>
@@ -3018,7 +3052,7 @@ tbody tr:last-child td { border-bottom:0; }
      <div class="row"><label class="number-label"><input id="set-inactive" type="number" min="1" max="2000" step="1"> Inactive after (hours since last action)</label></div>
      <div class="row"><label class="number-label"><input id="set-ocwarn" type="number" min="1" max="2000" step="1"> Last OC amber after (hours)</label><label class="number-label"><input id="set-ocalert" type="number" min="1" max="2000" step="1"> red after (hours)</label></div>
      <div class="row"><label class="checkbox-label"><input id="set-autorefresh" type="checkbox"> Refresh the live overview automatically</label></div>
-     <div class="row"><label class="checkbox-label"><input id="set-card" type="checkbox"> Show a summary card above the faction crimes list</label></div>
+     <div class="row"><label class="number-label">Summary card on the crimes page <select id="set-card" aria-label="Summary card position"><option value="top">Top of the list</option><option value="bottom">Bottom of the list</option><option value="off">Off</option></select></label></div>
      <div class="row"><label class="checkbox-label"><input id="set-chance" type="checkbox"> Show estimated success in the dashboard's Crimes table (sends OC names and pass rates to tornprobability.com; open roles count as your minimum CPR)</label></div></div>
     <div class="settings-card section-card"><div class="eyebrow">Crimes page</div><h2>On the crimes page</h2><p>Helpers drawn on Torn's own crimes page, using your CPR settings. They only colour, label, reorder and grey out buttons on the page you are viewing; nothing is clicked or sent for you.</p>
      <div class="row"><label class="checkbox-label"><input id="set-onpage" type="checkbox"> Show CPR colours, role weights and your-OC highlight on OC cards</label></div>
@@ -3066,7 +3100,7 @@ tbody tr:last-child td { border-bottom:0; }
         $('#fetch').addEventListener('click', runReport);
         $('#cancel').addEventListener('click', () => controller?.abort());
         root.querySelectorAll('[data-days]').forEach(el => el.addEventListener('click', () => preset(Number(el.dataset.days))));
-        for (const selector of ['#owner', '#crime']) $(selector).addEventListener('change', () => { detailPage = 0; render(); });
+        for (const selector of ['#crime']) $(selector).addEventListener('change', () => { detailPage = 0; render(); });
         for (const selector of ['#from', '#to']) $(selector).addEventListener('change', () => setSelectedPreset(null));
         const sortable = (attr, apply) => root.querySelectorAll('[' + attr + ']').forEach(th => {
             const select = () => apply(th);
@@ -3240,6 +3274,10 @@ tbody tr:last-child td { border-bottom:0; }
         for (const [id, name] of [['#m-onpage', 'onPage'], ['#m-weights', 'tpWeights'], ['#m-block', 'blockJoins'], ['#m-hide-declined', 'hideDeclined'], ['#m-move-empty', 'moveEmpty']]) {
             $(id).addEventListener('change', async () => { settings[name] = $(id).checked; await saveSettings(); renderCard(); rescanAll(); });
         }
+        $('#m-card').addEventListener('change', async () => {
+            settings.cardPos = ['top', 'bottom', 'off'].includes($('#m-card').value) ? $('#m-card').value : 'top';
+            await saveSettings(); if ($('#set-card')) $('#set-card').value = settings.cardPos; scheduleCard();
+        });
         $('#m-joinpolicy').addEventListener('change', async () => {
             settings.joinPolicy = ['auto', 'on', 'off'].includes($('#m-joinpolicy').value) ? $('#m-joinpolicy').value : 'auto';
             await saveSettings(); rescanAll();
@@ -3294,7 +3332,7 @@ tbody tr:last-child td { border-bottom:0; }
             if (panel.hidden) launcher.hidden = !launcherShown();
         });
         $('#set-autorefresh').addEventListener('change', async () => { settings.autoRefresh = $('#set-autorefresh').checked; await saveSettings(); });
-        $('#set-card').addEventListener('change', async () => { settings.crimesCard = $('#set-card').checked; await saveSettings(); scheduleCard(); });
+        $('#set-card').addEventListener('change', async () => { settings.cardPos = ['top', 'bottom', 'off'].includes($('#set-card').value) ? $('#set-card').value : 'top'; await saveSettings(); scheduleCard(); });
         $('#set-chance').addEventListener('change', async () => {
             settings.successChance = $('#set-chance').checked; await saveSettings();
             if (settings.successChance) updateChances(); else chances.clear();
@@ -3341,7 +3379,7 @@ tbody tr:last-child td { border-bottom:0; }
         $('#set-breach-desktop').checked = settings.breachDesktop; $('#set-breach-desktop').closest('.row').hidden = !gmNotify; $('#set-breach-items').checked = settings.breachItems; $('#set-breach-away').checked = settings.breachAway; $('#set-launcher-all').checked = settings.launcherEverywhere;
         launcher.hidden = !launcherShown();
         renderCprEditor();
-        $('#set-autorefresh').checked = settings.autoRefresh; $('#set-card').checked = settings.crimesCard; $('#set-chance').checked = settings.successChance;
+        $('#set-autorefresh').checked = settings.autoRefresh; $('#set-card').value = settings.cardPos; $('#set-chance').checked = settings.successChance;
         $('#launcher-pos').value = launcherPos; applyLauncherPos();
         currentView = key ? 'live' : 'settings';
         updateConnection(); updateView(); renderLive(); renderIgnored();

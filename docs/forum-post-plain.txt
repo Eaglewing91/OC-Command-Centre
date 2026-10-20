@@ -1,6 +1,6 @@
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           ★  OC COMMAND CENTRE  ★
-  The all-in-one organized crime toolkit · v4.0.3
+  The all-in-one organized crime toolkit · v4.1.0
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Every member gets CPR colours, a status bar and smart Join blocking on the crimes page. Leaders get a live OC dashboard, reports, item costs and OC BREACH alerts, and can push CPR rules to the whole faction with a single newsletter.
 No faction's rules are built in, so it works for any faction in Torn.
