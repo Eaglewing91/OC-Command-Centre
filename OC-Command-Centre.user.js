@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OC Command Centre
 // @namespace    https://www.torn.com/profiles.php?XID=571041
-// @version      4.1.0
+// @version      4.1.1
 // @description  Organized crime toolkit for Torn factions: CPR rules and Join blocking on the crimes page for every member, plus a live OC dashboard, reports, item costs and OC BREACH alerts for leaders.
 // @author       Eaglewing [571041]
 // @homepageURL  https://github.com/Eaglewing91/OC-Command-Centre
@@ -61,7 +61,7 @@
 
 (function () {
     'use strict';
-    const VERSION = '4.1.0';
+    const VERSION = '4.1.1';
     const NAME = 'OC Command Centre';
     // Local, per-userscript storage prefix. No API key is bundled in this file.
     const PREFIX = 'eaglewing_oc_command_centre_v1_';
@@ -427,7 +427,8 @@
                 return { role: labels[i], userId,
                     name: member ? String(member.name || 'ID ' + userId) : userId ? 'ID ' + userId : null,
                     memberState: member?.status?.state ? String(member.status.state) : null,
-                    memberStatus: member?.status?.description ? String(member.status.description) : '',
+                    memberStatus: member?.status?.description ? String(member.status.description).trim() : '',
+                    memberUntil: Number.isFinite(Number(member?.status?.until)) && Number(member.status.until) > 0 ? Number(member.status.until) : null,
                     progress: percent(slot?.user?.progress), joined: stamp(slot?.user?.joined_at), pass: percent(slot?.checkpoint_pass_rate),
                     itemId: validId(req?.id) ? Number(req.id) : null, itemReusable: req?.is_reusable === true,
                     itemAvailable: typeof req?.is_available === 'boolean' ? req.is_available : null };
@@ -447,7 +448,7 @@
             if (late && stage === 'recruiting') issue('stalled', 3, 'Stalled: needs members');
             if (late && stage === 'planning') issue('delayed', 2, 'Delayed: waiting to start');
             const away = stage === 'planning' && (late || (readyAt != null && readyAt - now <= 3600))
-                ? filled.filter(s => s.memberState && s.memberState !== 'Okay') : [];
+                ? filled.filter(s => awayAtStart(s, readyAt, now)) : [];
             if (away.length) issue('away', 2, 'Unavailable', away.map(s => s.name + ' (' + s.role + ') ' + (s.memberStatus || s.memberState)));
             for (const s of slotRows) if (s.itemId) s.itemName = itemName(s.itemId);
             const missing = filled.filter(s => s.itemId && s.itemAvailable === false);
@@ -516,6 +517,15 @@
         const left = readyAt - now;
         return left <= 0 ? 'is due to start now' : 'starts in ' + Math.max(1, Math.round(left / 60)) + 'm';
     }
+    // A member counts as unavailable only if they will still be away when the OC
+    // is due to start (5-minute margin). Hospital and jail give an end time; travel
+    // does not, so travelling members always count.
+    const AWAY_MARGIN = 300;
+    function awayAtStart(s, readyAt, now) {
+        if (!s?.memberState || s.memberState === 'Okay') return false;
+        if (s.memberUntil == null || readyAt == null) return true;
+        return s.memberUntil + AWAY_MARGIN > Math.max(readyAt, now);
+    }
     function findBreaches(analysis, options = {}, now = Math.floor(Date.now() / 1000)) {
         const { cpr = true, items = false, away = false } = options;
         const out = [];
@@ -526,7 +536,7 @@
                 const base = { crimeId: crime.id, crime: crime.name, userId: s.userId, name: s.name, role: s.role, pass: s.pass };
                 if (items && s.itemId && s.itemAvailable === false) out.push({ ...base, type: 'item', key: crime.id + ':' + s.userId + ':item:' + s.itemId,
                     text: 'Missing item: ' + s.name + ' (' + s.role + ') needs ' + (s.itemName || 'Item #' + s.itemId) + ', ' + crime.name + ' ' + startsText(crime.readyAt, now) });
-                if (away && s.memberState && s.memberState !== 'Okay') out.push({ ...base, type: 'away', key: crime.id + ':' + s.userId + ':away:' + s.memberState,
+                if (away && awayAtStart(s, crime.readyAt, now)) out.push({ ...base, type: 'away', key: crime.id + ':' + s.userId + ':away:' + s.memberState,
                     text: 'Unavailable: ' + s.name + ' (' + s.role + ') ' + (s.memberStatus || s.memberState) + ', ' + crime.name + ' ' + startsText(crime.readyAt, now) });
             }
             if (!cpr) continue;
