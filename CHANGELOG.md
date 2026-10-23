@@ -2,6 +2,8 @@
 
 All notable changes to OC Command Centre. Updates install automatically through your userscript manager.
 
+Versions before 4.0.0 were private test builds. Only the main ones are listed, and each includes the smaller fixes released since the version below it.
+
 ## 4.2.0 · 2026-10-23
 
 ### Added
@@ -52,3 +54,42 @@ First public release.
 - **For every member (no API key):** CPR colours on every role, a status bar on each OC, Join buttons that explain why they're greyed out, hidden crimes, role weights from Torn Probability, and CPR rules that update automatically from faction newsletters.
 - **For leaders (Faction API access):** a live overview, estimated success, OC BREACH alerts, reports with item costs and CSV exports, a CPR settings editor with an optional joining policy, and settings codes with a ready-to-send newsletter.
 - Works with Tampermonkey, Violentmonkey and Torn PDA.
+
+Changes since 3.8.2:
+- **Status bar on each OC.** One tidy bar per OC holds the join status, the stall timer ("Stalls in 3h 20m", "MEMBERS NEEDED NOW") and LAST JOIN / JOINED TOO EARLY.
+- **Join reasons.** Greyed-out Join buttons show why underneath, for example "Needs 73 · you have 70" or "Hidden crime".
+- **Possible early joins** now also appear in the dashboard's Needs attention list.
+- **Torn API error 17** (a temporary Torn server error) is retried automatically, with a clearer message.
+- A "What members see" box in CPR settings, and simpler CPR requirement wording.
+- Removed the success chance from the crimes page. It stays in the leader dashboard, where it's projected correctly.
+
+## 3.8.2
+
+### Changed
+- **The joining policy is off by default.** It's a separate section in CPR settings, and its options (wait limit, start-last OCs, exception roles, low-scope fallback) only show when it's turned on. Members can choose "As set by my faction's code", "Always" or "Never".
+- Clearer descriptions for the wait limit and the low-scope fallback.
+
+## 3.8.0
+
+### Added
+- **Torn PDA support.** Requests go through Torn PDA's own layer, and members open settings from the crimes-page card, because PDA has no userscript menu.
+- **More OC BREACH alerts** for an OC starting within the hour: a member missing their item (naming the item), or a member who is unavailable. These work without CPR rules.
+- **"What changed" on newsletter imports.** Members see a short list of the rule changes, with Undo.
+- Missing items are named in Needs attention.
+
+## 3.7.6
+
+### Added
+- **A clearer API key section.** Regular members are told they don't need a key, with who does need one (positions with Faction API access) and which key level.
+- A green "CPR settings imported" confirmation in the member menu, showing where the rules came from and when.
+- A Credits section.
+
+## 3.7.0
+
+### Added
+- **Estimated success for recruiting crimes.** Crimes still recruiting get a projected chance, shown as "≥X%", with open roles counted at their minimum CPR. Full crimes show the real figure. Roles are matched to Torn Probability by name.
+
+## 3.6.2
+
+### Added
+- **A ready-to-send newsletter.** Generating a settings code also writes the newsletter text around it, with Copy buttons, so leaders can paste it straight into a faction newsletter.
