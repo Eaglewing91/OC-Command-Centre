@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OC Command Centre
 // @namespace    https://www.torn.com/profiles.php?XID=571041
-// @version      4.1.1
+// @version      4.2.0
 // @description  Organized crime toolkit for Torn factions: CPR rules and Join blocking on the crimes page for every member, plus a live OC dashboard, reports, item costs and OC BREACH alerts for leaders.
 // @author       Eaglewing [571041]
 // @homepageURL  https://github.com/Eaglewing91/OC-Command-Centre
@@ -54,14 +54,19 @@
 // - Purpose of Use: Non-malicious statistical analysis and public community
 //   tools (faction OC management and item cost audit).
 // - Key Storage & Sharing: Stored / used only for automation (live refresh and
-//   breach checks). Kept locally and sent only to api.torn.com, in the request
-//   header. Regular members do not need a key.
+//   breach checks; the travel-page check). Kept locally and sent only to
+//   api.torn.com, in the request header. Regular members do not need a key.
 // - Key Access Level: Custom: Minimal with Faction API access. Selections:
-//   faction basic, members, crimes; torn items.
+//   faction basic, members, crimes; torn items; user organizedcrime (travel
+//   warning).
+// Optional travel warning (any member): your own Minimal key, or a custom key
+// with only user organizedcrime. Used for one API call when you open the travel
+// page (then at most once a minute while it stays open) to read your own OC's
+// start time. Stored locally, sent only to api.torn.com, shared with nobody.
 
 (function () {
     'use strict';
-    const VERSION = '4.1.1';
+    const VERSION = '4.2.0';
     const NAME = 'OC Command Centre';
     // Local, per-userscript storage prefix. No API key is bundled in this file.
     const PREFIX = 'eaglewing_oc_command_centre_v1_';
@@ -73,7 +78,7 @@
     const LIVE_TTL = 60 * 1000;
     const COMPLETED_STATUSES = ['successful', 'failure', 'failed'];
     const DEFAULT_SETTINGS = { lowPass: 50, inactiveHours: 96, lastOcWarnHours: 24, lastOcAlertHours: 48,
-        ignored: [], successChance: false, cardPos: 'top', cardCompact: true, autoRefresh: true,
+        ignored: [], successChance: false, cardPos: 'top', cardCompact: true, travelWarn: true, autoRefresh: true,
         breachAlerts: true, breachDesktop: false, breachMinutes: 5, breachItems: true, breachAway: true, launcherEverywhere: false, rules: null,
         onPage: true, hideDeclined: true, moveEmpty: true, joinPolicy: 'auto', blockJoins: true, tpWeights: true, scope: null };
 
@@ -732,7 +737,7 @@
     const gmMenu = typeof G.registerMenuCommand === 'function' ? (n, f) => G.registerMenuCommand(n, f)
         : typeof GM_registerMenuCommand === 'function' ? (n, f) => GM_registerMenuCommand(n, f) : null;
 
-    let key = '', catalog = { at: 0, items: {} }, ttPrices = {}, preferTT = true, settings = { ...DEFAULT_SETTINGS };
+    let key = '', memberKey = '', catalog = { at: 0, items: {} }, ttPrices = {}, preferTT = true, settings = { ...DEFAULT_SETTINGS };
     let report = null, busy = false, controller = null, lastRequest = 0, detailPage = 0;
     let host, root, panel, launcher, cardHost, cardRoot;
     let sortBy = 'cost', sortDirection = -1, currentView = 'live', launcherPos = 'hidden';
@@ -752,7 +757,7 @@
     const $ = selector => root.querySelector(selector);
     const nowSec = () => Math.floor(Date.now() / 1000);
     function message(text, bad = false) { $('#status-text').textContent = text; $('#status').classList.toggle('bad', bad); }
-    function safeError(error) { return String(error?.message || 'Unknown error').split(key || '\u0000').join('[key redacted]'); }
+    function safeError(error) { return String(error?.message || 'Unknown error').split(key || '\u0000').join('[key redacted]').split(memberKey || '\u0000').join('[key redacted]'); }
     function info(id) {
         const item = catalog.items?.[id], tt = ttPrices[id];
         const freshTT = preferTT && tt && Date.now() - tt.at < PRICE_TTL && priceNumber(tt.price) != null;
@@ -774,7 +779,7 @@
         apiGate = turn.catch(() => {});
         return turn;
     }
-    async function apiRequest(path, parameters = {}, signal) {
+    async function apiRequest(path, parameters = {}, signal, apiKey = key) {
         if (!/^[A-Za-z0-9/,]+$/.test(path)) throw new Error('Invalid API path.');
         for (let attempt = 0; attempt < 4; attempt++) {
             if (signal?.aborted) throw new Error('Cancelled');
@@ -792,7 +797,7 @@
                 signal?.addEventListener('abort', abort, { once: true });
                 try {
                     handle = gmRequest({ method: 'GET', url: url.href,
-                        headers: { Authorization: 'ApiKey ' + key }, timeout: 25000,
+                        headers: { Authorization: 'ApiKey ' + apiKey }, timeout: 25000,
                         onload: r => finish(resolve, r), onerror: () => finish(reject, new Error('API connection failed.')),
                         ontimeout: () => finish(reject, new Error('API request timed out.')), onabort: () => finish(reject, new Error('Cancelled')) });
                 } catch (_) { finish(reject, new Error('API request could not start.')); }
@@ -810,7 +815,7 @@
             if (invalidJSON) throw new Error('Torn returned a non-JSON response (HTTP ' + response.status + ').');
             if (data?.error) {
                 if (code === 17) throw Object.assign(new Error('Torn API is having temporary server problems (error 17). Nothing is wrong with your key; try again in a few minutes.'), { code });
-                const hint = [2, 16].includes(code) ? ' Check the key and permissions for faction (basic, members, crimes) and torn/items. Your faction position must grant API access.' : '';
+                const hint = [2, 16].includes(code) && apiKey === key ? ' Check the key and permissions for faction (basic, members, crimes) and torn/items. Your faction position must grant API access.' : '';
                 throw Object.assign(new Error('Torn API ' + code + ': ' + String(data.error.error || data.error.message || 'request denied') + hint), { code });
             }
             if (response.status !== 200) throw new Error('Torn API HTTP ' + response.status + '.');
@@ -2465,6 +2470,55 @@ button.occ-join-disabled{filter:grayscale(1);opacity:0.45;cursor:not-allowed !im
         showRulesNotice('Your previous CPR rules are back.', false);
     }
 
+    // ── Travel warning ────────────────────────────────────────────────────
+    // On Torn's travel page, warns you when a round trip would get you back
+    // after your OC is due to start. One API call (user/organizedcrime: your
+    // own current OC) with your own key, or a leader's saved key; repeated at
+    // most once a minute while the travel page stays open. Display only:
+    // nothing is clicked and travel is never blocked.
+    // Standard-ticket one-way flight times in minutes (airstrip and business class are faster).
+    const FLIGHTS = [['Mexico', 26], ['Cayman Islands', 35], ['Canada', 41], ['Hawaii', 134], ['United Kingdom', 159], ['Argentina', 167],
+        ['Switzerland', 175], ['Japan', 225], ['China', 242], ['UAE', 271], ['South Africa', 297]];
+    const TRAVEL_BUFFER = 5 * 60;
+    let myOC = null, myOCAt = 0, travelBusy = false, travelDismissed = '';
+    const ownKey = () => memberKey || key;
+    function onTravelPage() {
+        return location.pathname === '/travelagency.php' || (location.pathname === '/page.php' && new URLSearchParams(location.search).get('sid') === 'travel');
+    }
+    async function fetchMyOC(force = false, apiKey = ownKey()) {
+        if (!force && Date.now() - myOCAt < 60000) return myOC;
+        const data = await apiRequest('user/organizedcrime', {}, null, apiKey);
+        const crime = data && typeof data === 'object' ? (data.organizedCrime ?? data.organizedcrime ?? null) : null;
+        myOC = crime && typeof crime === 'object' ? crime : null; myOCAt = Date.now();
+        return myOC;
+    }
+    function hideTravel() { if (root) $('#travel-warn').hidden = true; }
+    async function checkTravel() {
+        if (!root || !onTravelPage() || !settings.travelWarn || !ownKey()) return hideTravel();
+        if (travelBusy) return;
+        travelBusy = true;
+        let crime;
+        try { crime = await fetchMyOC(); } catch (error) { console.warn('[' + NAME + '] Travel check failed:', safeError(error)); return hideTravel(); }
+        finally { travelBusy = false; }
+        const status = String(crime?.status || ''), ready = Number(crime?.ready_at) || null, now = nowSec();
+        if (!crime || !['Planning', 'Recruiting'].includes(status) || !ready) return hideTravel();
+        const left = ready - now, longest = FLIGHTS[FLIGHTS.length - 1][1] * 120 + TRAVEL_BUFFER;
+        const id = String(crime.id) + ':' + ready;
+        if (left > longest || travelDismissed === id) return hideTravel();
+        const name = String(crime.name || 'your OC');
+        const fits = FLIGHTS.filter(([, minutes]) => minutes * 120 + TRAVEL_BUFFER <= left).map(([place]) => place);
+        const at = new Date(ready * 1000).toISOString().slice(11, 16) + ' TCT';
+        $('#travel-text').textContent = left <= 0
+            ? 'Your OC ' + name + ' is ready to start. If you fly now, it will be delayed until you are back.'
+            : 'Your OC ' + name + ' is due to start in ' + duration(left) + ' (' + at + '). If you are not back by then, it will be delayed.';
+        $('#travel-fits').textContent = left <= 0 ? '' : fits.length
+            ? 'Back in time with a standard ticket: ' + fits.join(', ') + '.'
+            : 'No destination gets you back in time with a standard ticket.';
+        $('#travel-fits').hidden = left <= 0;
+        $('#travel-warn').dataset.id = id;
+        $('#travel-warn').hidden = false;
+    }
+
     // ── Member settings (no dashboard access) ─────────────────────────────
     function memberStatus(text, bad = false) { if (!root) return; $('#m-key-status').textContent = text; $('#m-key-status').className = 'note' + (bad ? ' value-lost' : ''); }
     function renderImportStatus() {
@@ -2476,9 +2530,15 @@ button.occ-join-disabled{filter:grayscale(1);opacity:0.45;cursor:not-allowed !im
         $('#m-summary').textContent = active ? rulesSummary(settings.rules) : '';
         $('#m-summary').hidden = !active;
     }
+    function travelKeyStatus(text, bad = false) {
+        if (!root) return;
+        $('#m-tkey-status').textContent = text || (memberKey ? '✓ Key saved. Travel warnings are on.' : key ? 'Using your leader key. No extra key needed.' : 'No key saved: travel warnings are off.');
+        $('#m-tkey-status').className = 'note' + (bad ? ' value-lost' : memberKey || key ? ' value-good' : '');
+    }
     function syncMemberPanel() {
         renderImportStatus(); $('#m-onpage').checked = settings.onPage; $('#m-weights').checked = settings.tpWeights;
         $('#m-block').checked = settings.blockJoins; $('#m-hide-declined').checked = settings.hideDeclined; $('#m-move-empty').checked = settings.moveEmpty; $('#m-card').value = settings.cardPos;
+        $('#m-travel').checked = settings.travelWarn; travelKeyStatus();
         $('#m-joinpolicy').value = settings.joinPolicy; $('#m-scope').value = getScope() ?? '';
     }
     function openMember() {
@@ -2595,7 +2655,7 @@ button.occ-join-disabled{filter:grayscale(1);opacity:0.45;cursor:not-allowed !im
             lastOcWarnHours: num(s.lastOcWarnHours, 24, 1, 2000), lastOcAlertHours: num(s.lastOcAlertHours, 48, 1, 2000),
             ignored: Array.isArray(s.ignored) ? s.ignored.filter(validId).map(Number) : [],
             successChance: s.successChance === true, autoRefresh: s.autoRefresh !== false,
-            cardPos: ['top', 'bottom', 'off'].includes(s.cardPos) ? s.cardPos : s.crimesCard === false ? 'off' : 'top', cardCompact: s.cardCompact !== false,
+            cardPos: ['top', 'bottom', 'off'].includes(s.cardPos) ? s.cardPos : s.crimesCard === false ? 'off' : 'top', cardCompact: s.cardCompact !== false, travelWarn: s.travelWarn !== false,
             breachAlerts: s.breachAlerts !== false, breachDesktop: s.breachDesktop === true, breachItems: s.breachItems !== false, breachAway: s.breachAway !== false,
             breachMinutes: num(s.breachMinutes, 5, 1, 60), launcherEverywhere: s.launcherEverywhere === true,
             onPage: s.onPage !== false, hideDeclined: s.hideDeclined !== false, moveEmpty: s.moveEmpty !== false,
@@ -2902,9 +2962,15 @@ tbody tr:last-child td { border-bottom:0; }
 #rules-notice-list { margin: 0 0 10px; padding: 0 0 0 16px; max-height: 240px; overflow: auto; font-size: 12px; line-height: 1.55; }
 #rules-notice-list .changes-head { list-style: none; margin-left: -16px; font-weight: 750; color: #9fe8c0; }
 #rules-notice-list .muted { list-style: none; margin-left: -16px; color: #9fb3a8; }
+#travel-warn { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 2147483647; width: min(480px, calc(100vw - 32px)); padding: 12px 15px; color: #fff1dc; background: #3a2410; border: 1px solid #c07a2c; border-left: 4px solid #ffaa3b; border-radius: 11px; box-shadow: 0 14px 40px #000a; }
+.travel-title { font-size: 13px; font-weight: 850; letter-spacing: .08em; color: #ffc26e; }
+#travel-text { margin: 6px 0 6px; font-size: 13px; line-height: 1.55; font-weight: 650; }
+#travel-fits { margin: 0 0 6px; font-size: 12px; line-height: 1.55; }
+.travel-note { margin: 0 0 10px; font-size: 11px; color: #d9b98f; }
 @media (prefers-reduced-motion:reduce) { button { transition:none; } }
 </style>
 <div id="rules-notice" role="status" hidden><div class="breach-head"><span class="rules-title">CPR RULES</span></div><p id="rules-notice-text"></p><ul id="rules-notice-list" hidden></ul><div class="breach-actions"><button id="rules-undo" class="btn mini">Undo</button><button id="rules-close" class="btn btn-primary mini">OK</button></div></div>
+<div id="travel-warn" role="alert" hidden><div class="breach-head"><span class="travel-title">OC TRAVEL WARNING</span></div><p id="travel-text"></p><p id="travel-fits"></p><p class="travel-note">Round trips with a standard ticket and a 5-minute margin. An airstrip or business class is faster.</p><div class="breach-actions"><button id="travel-close" class="btn btn-primary mini">OK</button></div></div>
 <div id="breach" role="alert" hidden><div class="breach-head"><span class="breach-title">OC BREACH</span><span id="breach-time"></span></div><ul id="breach-list"></ul><div class="breach-actions"><button id="breach-view" class="btn btn-primary mini">View</button><button id="breach-dismiss" class="btn mini">Dismiss</button></div></div>
 <div id="m-backdrop" hidden></div>
 <section id="member-panel" hidden role="dialog" aria-modal="true" aria-label="OC CPR requirements settings">
@@ -2926,6 +2992,18 @@ tbody tr:last-child td { border-bottom:0; }
    <div class="row"><label class="number-label">Summary card <select id="m-card" aria-label="Summary card position"><option value="top">Top of the list</option><option value="bottom">Bottom of the list</option><option value="off">Off</option></select></label></div>
    <p class="note" style="margin:0 0 6px">Torn PDA has no userscript menu, so there the card stays at the top: it's how you open these settings.</p>
    <div class="row"><label class="number-label">Joining policy <select id="m-joinpolicy" aria-label="Joining policy"><option value="auto">As set by my faction's code</option><option value="on">Always</option><option value="off">Never</option></select></label><label class="number-label"><input id="m-scope" type="number" min="0" max="999" step="1" placeholder="Unknown"> Current OC scope</label> <span class="note">(only used by the low-scope fallback, if your faction's code turns it on; ask your OC admins)</span></div></div>
+  <div class="settings-card section-card"><div class="eyebrow">Optional</div><h2>Travel warning</h2>
+   <p>Add your own API key and Torn's travel page warns you when a trip would get you back after your OC is due to start, which would delay it for everyone. Without a key, nothing changes. Leaders who saved a key below don't need to add it again.</p>
+   <div class="row"><label class="checkbox-label"><input id="m-travel" type="checkbox"> Warn me on the travel page if flying would delay my OC</label></div>
+   <div class="row"><input id="m-tkey" type="password" autocomplete="off" spellcheck="false" placeholder="Your 16-character API key (Minimal)" aria-label="Your API key for travel warnings"><button id="m-tkey-save" class="btn btn-primary">Save key</button><button id="m-tkey-clear" class="btn btn-danger">Remove key</button></div>
+   <p id="m-tkey-status" class="note" style="margin:8px 0 0"></p>
+   <div class="table-scroll" style="max-height:none;margin-top:10px"><table class="tos-table" aria-label="Travel warning terms of service"><tbody>
+    <tr><td class="value-strong">Data Storage</td><td>Only locally: the key in your userscript manager. Your OC details are only held in memory while the travel page is open.</td></tr>
+    <tr><td class="value-strong">Data Sharing</td><td>Nobody. The key is sent only to api.torn.com.</td></tr>
+    <tr><td class="value-strong">Purpose of Use</td><td>Personal: warning you before a trip that would delay your faction's OC.</td></tr>
+    <tr><td class="value-strong">Key Storage &amp; Sharing</td><td>Stored / Used only for automation (one check when you open the travel page, then at most once a minute while it stays open).</td></tr>
+    <tr><td class="value-strong">Key Access Level</td><td>Minimal, or Custom with only user → organizedcrime.</td></tr>
+   </tbody></table></div></div>
   <div class="settings-card section-card"><div class="eyebrow">Leaders</div><h2>OC Command Centre</h2><div class="key-warning"><strong>Regular members: you do not need an API key.</strong> CPR colours, Join blocking and newsletter imports all work without one. Leave this box empty.</div>
    <p>The full dashboard (live overview, reports, breach alerts and CPR editing) is only for faction leaders and officers.</p>
    <ul class="key-req"><li><strong>Who:</strong> members whose faction position has <strong>Faction API access</strong> (set by your faction leader under faction positions).</li><li><strong>Key level:</strong> <strong>Minimal</strong>, or a custom key with only faction basic, members, crimes and torn items.</li></ul>
@@ -3062,6 +3140,7 @@ tbody tr:last-child td { border-bottom:0; }
      <div class="row"><label class="number-label"><input id="set-inactive" type="number" min="1" max="2000" step="1"> Inactive after (hours since last action)</label></div>
      <div class="row"><label class="number-label"><input id="set-ocwarn" type="number" min="1" max="2000" step="1"> Last OC amber after (hours)</label><label class="number-label"><input id="set-ocalert" type="number" min="1" max="2000" step="1"> red after (hours)</label></div>
      <div class="row"><label class="checkbox-label"><input id="set-autorefresh" type="checkbox"> Refresh the live overview automatically</label></div>
+     <div class="row"><label class="checkbox-label"><input id="set-travel" type="checkbox"> Warn me on the travel page if flying would delay my OC (uses your key: user → organizedcrime)</label></div>
      <div class="row"><label class="number-label">Summary card on the crimes page <select id="set-card" aria-label="Summary card position"><option value="top">Top of the list</option><option value="bottom">Bottom of the list</option><option value="off">Off</option></select></label></div>
      <div class="row"><label class="checkbox-label"><input id="set-chance" type="checkbox"> Show estimated success in the dashboard's Crimes table (sends OC names and pass rates to tornprobability.com; open roles count as your minimum CPR)</label></div></div>
     <div class="settings-card section-card"><div class="eyebrow">Crimes page</div><h2>On the crimes page</h2><p>Helpers drawn on Torn's own crimes page, using your CPR settings. They only colour, label, reorder and grey out buttons on the page you are viewing; nothing is clicked or sent for you.</p>
@@ -3284,6 +3363,27 @@ tbody tr:last-child td { border-bottom:0; }
         for (const [id, name] of [['#m-onpage', 'onPage'], ['#m-weights', 'tpWeights'], ['#m-block', 'blockJoins'], ['#m-hide-declined', 'hideDeclined'], ['#m-move-empty', 'moveEmpty']]) {
             $(id).addEventListener('change', async () => { settings[name] = $(id).checked; await saveSettings(); renderCard(); rescanAll(); });
         }
+        $('#m-travel').addEventListener('change', async () => { settings.travelWarn = $('#m-travel').checked; await saveSettings(); if ($('#set-travel')) $('#set-travel').checked = settings.travelWarn; checkTravel(); });
+        $('#m-tkey-save').addEventListener('click', async () => {
+            const candidate = $('#m-tkey').value.trim();
+            if (!/^[A-Za-z0-9]{16}$/.test(candidate)) return travelKeyStatus('Enter a valid 16-character Torn API key.', true);
+            $('#m-tkey-save').disabled = true; travelKeyStatus('Checking the key…');
+            try {
+                const crime = await fetchMyOC(true, candidate);
+                memberKey = candidate; await save('member_key', candidate); $('#m-tkey').value = '';
+                travelKeyStatus('✓ Key saved. ' + (crime && ['Planning', 'Recruiting'].includes(String(crime.status)) ? 'You are in ' + String(crime.name || 'an OC') + '.' : 'You are not in an OC right now.'));
+                checkTravel();
+            } catch (error) {
+                const code = error.code;
+                travelKeyStatus(code === 2 ? 'That key is incorrect.' : code === 16 ? 'This key\'s access level is too low. Use a Minimal key, or a custom key with user → organizedcrime.'
+                    : code === 18 ? 'This key is paused. Unpause it in Torn\'s API settings.' : safeError(error), true);
+            } finally { $('#m-tkey-save').disabled = false; }
+        });
+        $('#m-tkey-clear').addEventListener('click', async () => {
+            memberKey = ''; myOC = null; myOCAt = 0;
+            try { await save('member_key', ''); } catch (_) {}
+            $('#m-tkey').value = ''; travelKeyStatus('Key removed.'); checkTravel();
+        });
         $('#m-card').addEventListener('change', async () => {
             settings.cardPos = ['top', 'bottom', 'off'].includes($('#m-card').value) ? $('#m-card').value : 'top';
             await saveSettings(); if ($('#set-card')) $('#set-card').value = settings.cardPos; scheduleCard();
@@ -3328,6 +3428,7 @@ tbody tr:last-child td { border-bottom:0; }
             await saveSettings(); rescanAll();
         });
         $('#breach-view').addEventListener('click', () => { currentView = 'live'; open(); });
+        $('#travel-close').addEventListener('click', () => { travelDismissed = $('#travel-warn').dataset.id || ''; hideTravel(); });
         $('#breach-dismiss').addEventListener('click', async () => {
             hideBreach();
             try { await save('breachDismissed', Date.now()); } catch (_) {}
@@ -3342,6 +3443,7 @@ tbody tr:last-child td { border-bottom:0; }
             if (panel.hidden) launcher.hidden = !launcherShown();
         });
         $('#set-autorefresh').addEventListener('change', async () => { settings.autoRefresh = $('#set-autorefresh').checked; await saveSettings(); });
+        $('#set-travel').addEventListener('change', async () => { settings.travelWarn = $('#set-travel').checked; await saveSettings(); checkTravel(); });
         $('#set-card').addEventListener('change', async () => { settings.cardPos = ['top', 'bottom', 'off'].includes($('#set-card').value) ? $('#set-card').value : 'top'; await saveSettings(); scheduleCard(); });
         $('#set-chance').addEventListener('change', async () => {
             settings.successChance = $('#set-chance').checked; await saveSettings();
@@ -3389,7 +3491,7 @@ tbody tr:last-child td { border-bottom:0; }
         $('#set-breach-desktop').checked = settings.breachDesktop; $('#set-breach-desktop').closest('.row').hidden = !gmNotify; $('#set-breach-items').checked = settings.breachItems; $('#set-breach-away').checked = settings.breachAway; $('#set-launcher-all').checked = settings.launcherEverywhere;
         launcher.hidden = !launcherShown();
         renderCprEditor();
-        $('#set-autorefresh').checked = settings.autoRefresh; $('#set-card').value = settings.cardPos; $('#set-chance').checked = settings.successChance;
+        $('#set-autorefresh').checked = settings.autoRefresh; $('#set-card').value = settings.cardPos; $('#set-travel').checked = settings.travelWarn; $('#set-chance').checked = settings.successChance;
         $('#launcher-pos').value = launcherPos; applyLauncherPos();
         currentView = key ? 'live' : 'settings';
         updateConnection(); updateView(); renderLive(); renderIgnored();
@@ -3415,6 +3517,12 @@ tbody tr:last-child td { border-bottom:0; }
         setInterval(syncBreach, 10000);
         setTimeout(breachCheck, 5000);
         syncBreach();
+        if (onTravelPage()) {
+            // Travel warning: one API call now, then at most one a minute while this page is open.
+            checkTravel();
+            setInterval(checkTravel, 60000);
+            window.addEventListener('hashchange', checkTravel);
+        }
         if (location.pathname === '/messages.php') {
             // Opened mails render after page load; check each change (DOM only).
             let mailScheduled = false;
@@ -3438,6 +3546,7 @@ tbody tr:last-child td { border-bottom:0; }
 
     async function init() {
         key = await read('key', ''); if (typeof key !== 'string') key = '';
+        memberKey = await read('member_key', ''); if (typeof memberKey !== 'string' || !/^[A-Za-z0-9]{16}$/.test(memberKey)) memberKey = '';
         catalog = await read('catalog', { at: 0, items: {} });
         if (!catalog || typeof catalog.items !== 'object' || !catalog.items || typeof catalog.at !== 'number') catalog = { at: 0, items: {} };
         ttPrices = await read('ttPrices', {}); if (!ttPrices || typeof ttPrices !== 'object') ttPrices = {};

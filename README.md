@@ -20,6 +20,7 @@ No faction's rules are built in. It works for any faction in Torn.
 - **Hidden crimes.** OCs your faction doesn't run are removed from the list. If someone joins one anyway, it's marked in red.
 - **Role weights** from Torn Probability.
 - **Automatic rule updates.** Open your faction's newsletter and the new CPR rules import instantly, with a "What changed" summary and Undo.
+- **Travel warning (optional).** Add your own Minimal API key and Torn's travel page warns you when a round trip would get you back after your OC is due to start, listing the destinations that still get you back in time.
 
 ![Status bar and Join reasons](docs/screenshots/status-bar.png)
 
@@ -76,7 +77,7 @@ Only real faction newsletters are trusted. The script checks for Torn's own "Thi
 
 | | |
 |---|---|
-| **Who needs one** | Only leaders and officers whose faction position has **Faction API access**. Regular members don't need a key. |
+| **Who needs one** | Only leaders and officers whose faction position has **Faction API access**. Regular members don't need a key (one is only needed for the optional travel warning). |
 | **Key level** | **Minimal**, or a custom key with only: faction `basic`, `members`, `crimes`; torn `items`. |
 | **Why** | Faction crimes data is only available to Minimal keys with Faction API access. That's also how the script checks you're allowed to see the dashboard. |
 | **Where it goes** | Stored only in your userscript manager and sent only to `api.torn.com`, in the request header (never in the address). A key without faction access is rejected and never saved. |
@@ -91,7 +92,9 @@ Only real faction newsletters are trusted. The script checks for Torn's own "Thi
 | **Data Sharing** | Nobody. Role weights are downloaded from tornprobability.com without sending anything about you. Optional and off by default: if a leader turns on Estimated success, OC names and slot pass rates (open slots counted at the minimum CPR) are sent to [tornprobability.com](https://tornprobability.com). |
 | **Purpose of Use** | Non-malicious statistical analysis and public community tools: faction OC management and item cost audit. |
 | **Key Storage & Sharing** | Stored / used only for automation (live refresh and breach checks). Kept locally and sent only to api.torn.com. |
-| **Key Access Level** | Custom: Minimal with Faction API access. Selections: faction basic, members, crimes; torn items. |
+| **Key Access Level** | Custom: Minimal with Faction API access. Selections: faction basic, members, crimes; torn items; user organizedcrime (travel warning). |
+
+**Optional travel warning key (any member):** your own Minimal key, or a custom key with only `user → organizedcrime`. One API call when you open the travel page, then at most one a minute while it stays open, to read your own OC's start time. Stored only in your userscript manager, sent only to api.torn.com, shared with nobody. Its ToS table is shown where you enter the key.
 
 ---
 
@@ -128,6 +131,7 @@ The script loads on Torn pages so leaders can receive OC BREACH alerts anywhere,
 | Faction **Crimes** tab, `organizedcrimes.php` | Crimes-page helpers, summary card, dashboard |
 | `messages.php` | Reads an opened faction newsletter for a settings code |
 | `item.php` | Leaders only: optional TornTools price import from the visible page |
+| Travel page (`page.php?sid=travel`, `travelagency.php`) | Optional travel warning when a trip would delay your OC |
 | Any page | Leaders only: the OC BREACH check and alert |
 
 ---
