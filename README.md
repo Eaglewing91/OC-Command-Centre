@@ -4,7 +4,7 @@
 
 No faction's rules are built in. It works for any faction in Torn.
 
-[**Install**](https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/OC-Command-Centre.user.js) · [User guide (PDF)](docs/OC-Command-Centre-Guide.pdf) · [Forum post](docs/forum-post.txt) · [Report a problem](https://github.com/Eaglewing91/OC-Command-Centre/issues)
+[**Install**](https://raw.githubusercontent.com/Eaglewing91/OC-Command-Centre/main/OC-Command-Centre.user.js) · [User guide (PDF)](docs/OC-Command-Centre-Guide.pdf) · [Changelog](CHANGELOG.md) · [Forum post](docs/forum-post.txt) · [Report a problem](https://github.com/Eaglewing91/OC-Command-Centre/issues)
 
 ![The crimes page with OC Command Centre](docs/screenshots/crimes-page.png)
 
