@@ -4,6 +4,11 @@ All notable changes to OC Command Centre. Updates install automatically through 
 
 Versions before 4.0.0 were private test builds. Only the main ones are listed, and each includes the smaller fixes released since the version below it.
 
+## 4.3.1 · 2026-10-24
+
+### Fixed
+- Keys saved before 4.3 are now checked for the "Organised Crimes" permission as soon as the update loads. Before this fix, a key saved in the last 6 hours wasn't checked until the 6 hours were up.
+
 ## 4.3.0 · 2026-10-24
 
 ### Changed

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OC Command Centre
 // @namespace    https://www.torn.com/profiles.php?XID=571041
-// @version      4.3.0
+// @version      4.3.1
 // @description  Organized crime toolkit for Torn factions: CPR rules and Join blocking on the crimes page for every member, plus a live OC dashboard, reports, item costs and OC BREACH alerts for leaders.
 // @author       Eaglewing [571041]
 // @homepageURL  https://github.com/Eaglewing91/OC-Command-Centre
@@ -69,7 +69,7 @@
 
 (function () {
     'use strict';
-    const VERSION = '4.3.0';
+    const VERSION = '4.3.1';
     const NAME = 'OC Command Centre';
     // Local, per-userscript storage prefix. No API key is bundled in this file.
     const PREFIX = 'eaglewing_oc_command_centre_v1_';
@@ -950,7 +950,7 @@
         } finally { key = previous; }
     }
     async function grantAccess(candidate) {
-        key = candidate; access = { ok: true, checkedAt: Date.now() };
+        key = candidate; access = { ok: true, checkedAt: Date.now(), oc: true };
         await save('key', key); await save('access', access);
         report = null; liveRaw = null; live = null; liveFetchedAt = 0;
     }
@@ -3590,15 +3590,16 @@ tbody tr:last-child td { border-bottom:0; }
         preferTT = (await read('preferTT', true)) === true;
         settings = readSettings(await read('settings', {}));
         const storedAccess = await read('access', null);
-        access = storedAccess && storedAccess.ok === true ? { ok: true, checkedAt: Number(storedAccess.checkedAt) || 0 } : { ok: false, checkedAt: 0 };
+        access = storedAccess && storedAccess.ok === true ? { ok: true, checkedAt: Number(storedAccess.checkedAt) || 0, oc: storedAccess.oc === true } : { ok: false, checkedAt: 0 };
         const pos = await read('launcherPos', 'hidden');
         launcherPos = LAUNCHER_POSITIONS.includes(pos) ? pos : 'hidden';
         buildUI();
         startTimers();
-        // Saved keys: recheck the position's "Organised Crimes" permission every 6 hours.
-        if (key && access.ok && Date.now() - (access.checkedAt || 0) > OC_RECHECK) {
+        // Saved keys: check the position's "Organised Crimes" permission straight away
+        // if this key has never had that check (keys saved before 4.3), then every 6 hours.
+        if (key && access.ok && (!access.oc || Date.now() - (access.checkedAt || 0) > OC_RECHECK)) {
             const result = await checkAccess(key);
-            if (result.ok) { access = { ok: true, checkedAt: Date.now() }; await save('access', access); }
+            if (result.ok) { access = { ok: true, checkedAt: Date.now(), oc: true }; await save('access', access); }
             else if (result.ocDenied || ACCESS_ERRORS.includes(result.code)) await revokeAccess(result.error);
         }
         // Keys saved by an earlier version: confirm faction access once (one API call).
