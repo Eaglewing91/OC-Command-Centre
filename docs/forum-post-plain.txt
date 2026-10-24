@@ -1,6 +1,6 @@
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           ★  OC COMMAND CENTRE  ★
-  The all-in-one organized crime toolkit · v4.2.0
+  The all-in-one organized crime toolkit · v4.3.0
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Every member gets CPR colours, a status bar and smart Join blocking on the crimes page. Leaders get a live OC dashboard, reports, item costs and OC BREACH alerts, and can push CPR rules to the whole faction with a single newsletter.
 No faction's rules are built in, so it works for any faction in Torn.
@@ -49,8 +49,8 @@ Yes. It only does what you could do by hand, and follows the rule of "the API or
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ▌ API KEY
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-◆ Who needs one: only leaders and officers whose position has Faction API access. Regular members do NOT need a key.
-◆ Key level: Minimal, or a custom key with only faction basic, members, crimes; torn items.
+◆ Who needs one: the Leader, Co-leader, and positions with both Faction API access and Organised Crimes. Regular members do NOT need a key.
+◆ Key level: Minimal, or a custom key with only faction basic, members, crimes, positions; user basic, faction; torn items.
 ◆ Where it goes: stored only in your userscript manager and sent only to api.torn.com.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ▌ TERMS OF SERVICE
@@ -59,7 +59,7 @@ Yes. It only does what you could do by hand, and follows the rule of "the API or
 ◆ Data Sharing: Nobody. Role weights are downloaded from tornprobability.com without sending anything about you. Optional, off by default: if a leader turns on Estimated success, OC names and slot pass rates are sent to tornprobability.com.
 ◆ Purpose of Use: Non-malicious statistical analysis / public community tools (faction OC management and item cost audit).
 ◆ Key Storage & Sharing: Stored / used only for automation (live refresh and breach checks). Kept locally, sent only to api.torn.com.
-◆ Key Access Level: Custom – Minimal with Faction API access (faction basic, members, crimes; torn items).
+◆ Key Access Level: Custom – Minimal with Faction API access (faction basic, members, crimes, positions; user basic, faction; torn items).
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ▌ INSTALL
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

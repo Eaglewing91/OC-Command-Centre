@@ -4,6 +4,15 @@ All notable changes to OC Command Centre. Updates install automatically through 
 
 Versions before 4.0.0 were private test builds. Only the main ones are listed, and each includes the smaller fixes released since the version below it.
 
+## 4.3.0 · 2026-10-24
+
+### Changed
+- **The dashboard is now limited to positions with Torn's "Organised Crimes" permission**, plus the Leader and Co-leader. Previously any key with Faction API access unlocked it. Everyone else gets the member menu, with a message explaining why. This uses each faction's own positions, set under faction controls → positions.
+- Saved keys are rechecked every 6 hours, so permission changes are picked up. If the position or its permissions can't be read (for example, a temporary API error), access isn't removed.
+
+### Notes
+- Leader keys now also use the `faction → positions` and `user → basic, faction` selections. A Minimal key already includes them.
+
 ## 4.2.0 · 2026-10-23
 
 ### Added

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OC Command Centre
 // @namespace    https://www.torn.com/profiles.php?XID=571041
-// @version      4.2.0
+// @version      4.3.0
 // @description  Organized crime toolkit for Torn factions: CPR rules and Join blocking on the crimes page for every member, plus a live OC dashboard, reports, item costs and OC BREACH alerts for leaders.
 // @author       Eaglewing [571041]
 // @homepageURL  https://github.com/Eaglewing91/OC-Command-Centre
@@ -57,8 +57,11 @@
 //   breach checks; the travel-page check). Kept locally and sent only to
 //   api.torn.com, in the request header. Regular members do not need a key.
 // - Key Access Level: Custom: Minimal with Faction API access. Selections:
-//   faction basic, members, crimes; torn items; user organizedcrime (travel
-//   warning).
+//   faction basic, members, crimes, positions; user basic, faction (to check
+//   your position has the "Organised Crimes" permission); torn items; user
+//   organizedcrime (travel warning).
+// The dashboard is only for the Leader, Co-leader and positions with Torn's
+// "Organised Crimes" permission; everyone else gets the member menu.
 // Optional travel warning (any member): your own Minimal key, or a custom key
 // with only user organizedcrime. Used for one API call when you open the travel
 // page (then at most once a minute while it stays open) to read your own OC's
@@ -66,7 +69,7 @@
 
 (function () {
     'use strict';
-    const VERSION = '4.2.0';
+    const VERSION = '4.3.0';
     const NAME = 'OC Command Centre';
     // Local, per-userscript storage prefix. No API key is bundled in this file.
     const PREFIX = 'eaglewing_oc_command_centre_v1_';
@@ -898,16 +901,50 @@
     // be fetched at all. Everyone else gets the crimes-page helpers only.
     let access = { ok: false, checkedAt: 0 };
     const ACCESS_ERRORS = [2, 7, 16, 18];
+    const OC_RECHECK = 6 * 60 * 60 * 1000;
     const hasAccess = () => !!key && access.ok === true;
+    // The dashboard is for positions with Torn's "Organised Crimes" permission
+    // (set under faction controls → positions), plus the Leader and Co-leader.
+    // Ability names are Torn's own, so this works the same in every faction.
+    // If the position or its permissions cannot be read, access is not removed.
+    const OC_ABILITY = /^organi[sz]ed crimes?$/i;
+    const ALWAYS_ALLOWED = ['leader', 'co-leader'];
+    async function ocPermission(members) {
+        let position = null;
+        try {
+            const me = await apiRequest('user/basic,faction', {});
+            position = typeof me?.faction?.position === 'string' ? me.faction.position : null;
+            const id = Number(me?.profile?.id ?? me?.player_id ?? me?.id);
+            if (!position && validId(id)) position = (members || []).find(m => Number(m?.id) === id)?.position ?? null;
+        } catch (error) { console.warn('[' + NAME + '] Could not read your faction position:', safeError(error)); }
+        if (!position) {
+            const name = getPlayerName();
+            if (name) position = (members || []).find(m => String(m?.name || '').toLowerCase() === name.toLowerCase())?.position ?? null;
+        }
+        if (typeof position !== 'string' || !position.trim()) return { known: false };
+        position = position.trim();
+        if (ALWAYS_ALLOWED.includes(position.toLowerCase())) return { known: true, allowed: true, position };
+        let list;
+        try { list = (await apiRequest('faction/positions', {}))?.positions; }
+        catch (error) { console.warn('[' + NAME + '] Could not read faction positions:', safeError(error)); return { known: false, position }; }
+        if (!Array.isArray(list) || !list.some(p => Array.isArray(p?.abilities))) return { known: false, position };
+        const entry = list.find(p => String(p?.name || '').trim().toLowerCase() === position.toLowerCase());
+        const allowed = !!entry && Array.isArray(entry.abilities) && entry.abilities.some(a => OC_ABILITY.test(String(a).trim()));
+        return { known: true, allowed, position };
+    }
+    const ocDeniedText = position => 'Your faction position (' + position + ') does not have the "Organised Crimes" permission, so the OC Command Centre dashboard is not available to you. '
+        + 'Your crimes page, CPR rules and the member menu still work. Leaders can change position permissions under faction controls → positions.';
     async function checkAccess(candidate) {
         const previous = key;
         key = candidate;
         try {
             const data = await apiRequest('faction/basic,members,crimes', { cat: 'available' });
             if (!Array.isArray(data?.members) || !Array.isArray(data?.crimes)) throw Object.assign(new Error('This key cannot read your faction\'s organized crimes.'), { code: 7 });
+            const perm = await ocPermission(data.members);
+            if (perm.known && !perm.allowed) return { ok: false, ocDenied: true, error: ocDeniedText(perm.position) };
             return { ok: true, faction: String(data.basic?.name || 'your faction') };
         } catch (error) {
-            return { ok: false, error: ACCESS_ERRORS.includes(error.code)
+            return { ok: false, code: error.code, error: ACCESS_ERRORS.includes(error.code)
                 ? 'This key has no faction API access. Ask your faction leader for a position with "Faction API access".'
                 : safeError(error) };
         } finally { key = previous; }
@@ -3006,7 +3043,7 @@ tbody tr:last-child td { border-bottom:0; }
    </tbody></table></div></div>
   <div class="settings-card section-card"><div class="eyebrow">Leaders</div><h2>OC Command Centre</h2><div class="key-warning"><strong>Regular members: you do not need an API key.</strong> CPR colours, Join blocking and newsletter imports all work without one. Leave this box empty.</div>
    <p>The full dashboard (live overview, reports, breach alerts and CPR editing) is only for faction leaders and officers.</p>
-   <ul class="key-req"><li><strong>Who:</strong> members whose faction position has <strong>Faction API access</strong> (set by your faction leader under faction positions).</li><li><strong>Key level:</strong> <strong>Minimal</strong>, or a custom key with only faction basic, members, crimes and torn items.</li></ul>
+   <ul class="key-req"><li><strong>Who:</strong> the Leader, Co-leader, and members whose faction position has both <strong>Faction API access</strong> and <strong>Organised Crimes</strong> (set by your faction leader under faction controls → positions).</li><li><strong>Key level:</strong> <strong>Minimal</strong>, or a custom key with only faction basic, members, crimes, positions; user basic, faction; and torn items.</li></ul>
    <p>A key without faction API access is rejected and not saved.</p>
    <div class="row"><input id="m-key" type="password" autocomplete="off" spellcheck="false" placeholder="16-character Torn API key" aria-label="Torn API key"><button id="m-check" class="btn btn-primary">Check access</button><a href="https://www.torn.com/preferences.php#tab=api" target="_blank" rel="noopener noreferrer">Create a key ↗</a></div>
    <p id="m-key-status" class="note" style="margin:10px 0 0"></p>
@@ -3015,7 +3052,7 @@ tbody tr:last-child td { border-bottom:0; }
     <tr><td class="value-strong">Data Sharing</td><td>Nobody. The key is sent only to api.torn.com.</td></tr>
     <tr><td class="value-strong">Purpose of Use</td><td>Public community tools: faction OC management.</td></tr>
     <tr><td class="value-strong">Key Storage &amp; Sharing</td><td>Stored / Used only for automation (live refresh and breach checks).</td></tr>
-    <tr><td class="value-strong">Key Access Level</td><td>Custom: Minimal with faction API access (faction basic, members, crimes; torn items).</td></tr>
+    <tr><td class="value-strong">Key Access Level</td><td>Custom: Minimal with faction API access (faction basic, members, crimes, positions; user basic, faction; torn items).</td></tr>
    </tbody></table></div></div>
   <p class="note" style="margin:0">Created by Eaglewing [571041].</p>
  </div></div>
@@ -3127,14 +3164,14 @@ tbody tr:last-child td { border-bottom:0; }
      </div></div>
    </div></section>
    <section id="settings" data-view-panel="settings" hidden><div class="settings-grid">
-    <div class="settings-card section-card"><div class="eyebrow">Connection</div><h2>Torn API key</h2><ul class="key-req"><li><strong>Who:</strong> faction leaders and officers whose position has <strong>Faction API access</strong>. Regular members do not need a key.</li><li><strong>Key level:</strong> <strong>Minimal</strong>, or a custom key with only <strong>faction: basic, members, crimes</strong> and <strong>torn: items</strong>.</li></ul><p> Your key is saved locally in your userscript manager, is never shown on the page after saving, and is sent only to api.torn.com over HTTPS in the Authorization header.</p><div class="row"><input id="key" type="password" autocomplete="off" spellcheck="false" placeholder="Enter your 16-character Torn API key" aria-label="Torn API key" data-lock><button id="save-key" class="btn btn-primary" data-lock>Save key</button><button id="forget-key" class="btn btn-danger" data-lock>Remove key</button><a href="https://www.torn.com/preferences.php#tab=api" target="_blank" rel="noopener noreferrer">Create a key ↗</a></div>
+    <div class="settings-card section-card"><div class="eyebrow">Connection</div><h2>Torn API key</h2><ul class="key-req"><li><strong>Who:</strong> the Leader, Co-leader, and members whose position has both <strong>Faction API access</strong> and <strong>Organised Crimes</strong>. Regular members do not need a key.</li><li><strong>Key level:</strong> <strong>Minimal</strong>, or a custom key with only <strong>faction: basic, members, crimes, positions</strong>, <strong>user: basic, faction</strong> and <strong>torn: items</strong>.</li></ul><p> Your key is saved locally in your userscript manager, is never shown on the page after saving, and is sent only to api.torn.com over HTTPS in the Authorization header.</p><div class="row"><input id="key" type="password" autocomplete="off" spellcheck="false" placeholder="Enter your 16-character Torn API key" aria-label="Torn API key" data-lock><button id="save-key" class="btn btn-primary" data-lock>Save key</button><button id="forget-key" class="btn btn-danger" data-lock>Remove key</button><a href="https://www.torn.com/preferences.php#tab=api" target="_blank" rel="noopener noreferrer">Create a key ↗</a></div>
      <div class="settings-subheading">Terms of service</div>
      <div class="table-scroll" style="max-height:none;margin-top:10px"><table class="tos-table" aria-label="Terms of service"><tbody>
       <tr><td class="value-strong">Data Storage</td><td>Only locally: key, settings, hidden members, price caches and breach alert state in your userscript manager; the join audit history in this browser's storage. OC data is kept in memory only while the page is open.</td></tr>
       <tr><td class="value-strong">Data Sharing</td><td>Nobody. Role weights are downloaded from tornprobability.com without sending anything about you. If you turn on success chances (off by default), the name and slot pass rates of each OC (open slots as their minimum CPR) are sent to tornprobability.com (<a href="https://www.torn.com/forums.php#/p=threads&f=67&t=16449999" target="_blank" rel="noopener noreferrer">Allenone's Torn Probability</a>). No names, IDs or API key are sent.</td></tr>
       <tr><td class="value-strong">Purpose of Use</td><td>Non malicious statistical analysis and public community tools: faction OC management and item cost audit.</td></tr>
       <tr><td class="value-strong">Key Storage &amp; Sharing</td><td>Stored / Used only for automation: stored locally, used for the automatic live refresh and breach checks, sent only to api.torn.com.</td></tr>
-      <tr><td class="value-strong">Key Access Level</td><td>Custom: Minimal with faction API access. Selections: faction basic, members, crimes; torn items.</td></tr>
+      <tr><td class="value-strong">Key Access Level</td><td>Custom: Minimal with faction API access. Selections: faction basic, members, crimes, positions; user basic, faction; torn items.</td></tr>
      </tbody></table></div></div>
     <div class="settings-card section-card"><div class="eyebrow">Live overview</div><h2>Warnings and refresh</h2><p>Thresholds for the live overview. The live view refreshes from the Torn API at most once a minute, only while it is open or the crimes-tab summary is visible.</p>
      <div class="row"><label class="number-label"><input id="set-inactive" type="number" min="1" max="2000" step="1"> Inactive after (hours since last action)</label></div>
@@ -3558,6 +3595,12 @@ tbody tr:last-child td { border-bottom:0; }
         launcherPos = LAUNCHER_POSITIONS.includes(pos) ? pos : 'hidden';
         buildUI();
         startTimers();
+        // Saved keys: recheck the position's "Organised Crimes" permission every 6 hours.
+        if (key && access.ok && Date.now() - (access.checkedAt || 0) > OC_RECHECK) {
+            const result = await checkAccess(key);
+            if (result.ok) { access = { ok: true, checkedAt: Date.now() }; await save('access', access); }
+            else if (result.ocDenied || ACCESS_ERRORS.includes(result.code)) await revokeAccess(result.error);
+        }
         // Keys saved by an earlier version: confirm faction access once (one API call).
         if (key && !access.ok) {
             const result = await checkAccess(key);
