@@ -4,6 +4,13 @@ All notable changes to OC Command Centre. Updates install automatically through 
 
 Versions before 4.0.0 were private test builds. Only the main ones are listed, and each includes the smaller fixes released since the version below it.
 
+## 4.3.2 · 2026-11-01
+
+### Changed
+- Terms of Service wording only, no change to what the script does:
+  - The header notes and the Data Sharing rows now say that role weights are downloaded from tornprobability.com (nothing about you is sent).
+  - The leader key's Key Storage row and access level now include the travel-page check (user → organizedcrime, for the travel warning).
+
 ## 4.3.1 · 2026-10-24
 
 ### Fixed

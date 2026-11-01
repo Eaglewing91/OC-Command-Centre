@@ -91,7 +91,7 @@ Only real faction newsletters are trusted. The script checks for Torn's own "Thi
 | **Data Storage** | Only locally. The key, settings, CPR rules, hidden members, price caches and alert state are kept in your userscript manager; join-tracking history is kept in your browser's storage. Nothing is stored anywhere else. |
 | **Data Sharing** | Nobody. Role weights are downloaded from tornprobability.com without sending anything about you. Optional and off by default: if a leader turns on Estimated success, OC names and slot pass rates (open slots counted at the minimum CPR) are sent to [tornprobability.com](https://tornprobability.com). |
 | **Purpose of Use** | Non-malicious statistical analysis and public community tools: faction OC management and item cost audit. |
-| **Key Storage & Sharing** | Stored / used only for automation (live refresh and breach checks). Kept locally and sent only to api.torn.com. |
+| **Key Storage & Sharing** | Stored / used only for automation (live refresh, breach checks and the travel-page check). Kept locally and sent only to api.torn.com. |
 | **Key Access Level** | Custom: Minimal with Faction API access. Selections: faction basic, members, crimes, positions; user basic, faction; torn items; user organizedcrime (travel warning). |
 
 **Optional travel warning key (any member):** your own Minimal key, or a custom key with only `user → organizedcrime`. One API call when you open the travel page, then at most one a minute while it stays open, to read your own OC's start time. Stored only in your userscript manager, sent only to api.torn.com, shared with nobody. Its ToS table is shown where you enter the key.

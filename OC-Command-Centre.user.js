@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OC Command Centre
 // @namespace    https://www.torn.com/profiles.php?XID=571041
-// @version      4.3.1
+// @version      4.3.2
 // @description  Organized crime toolkit for Torn factions: CPR rules and Join blocking on the crimes page for every member, plus a live OC dashboard, reports, item costs and OC BREACH alerts for leaders.
 // @author       Eaglewing [571041]
 // @homepageURL  https://github.com/Eaglewing91/OC-Command-Centre
@@ -38,7 +38,8 @@
 //
 // Torn scripting rules: this script only uses the Torn API (api.torn.com) and
 // the page you are viewing. It never clicks, joins, leaves or submits anything
-// for you and makes no non-API requests to Torn. Only API calls run on a timer.
+// for you and makes no non-API requests to Torn. Only API calls run on a timer, plus requests
+// to tornprobability.com (role weights; success chances only if a leader turns that on).
 // Newsletter auto-import only reads a faction newsletter you open yourself on
 // messages.php (the page you are viewing). It makes no requests, reads no other
 // mail, and keeps only the settings code and the sender's name/ID, saved locally.
@@ -69,7 +70,7 @@
 
 (function () {
     'use strict';
-    const VERSION = '4.3.1';
+    const VERSION = '4.3.2';
     const NAME = 'OC Command Centre';
     // Local, per-userscript storage prefix. No API key is bundled in this file.
     const PREFIX = 'eaglewing_oc_command_centre_v1_';
@@ -3036,7 +3037,7 @@ tbody tr:last-child td { border-bottom:0; }
    <p id="m-tkey-status" class="note" style="margin:8px 0 0"></p>
    <div class="table-scroll" style="max-height:none;margin-top:10px"><table class="tos-table" aria-label="Travel warning terms of service"><tbody>
     <tr><td class="value-strong">Data Storage</td><td>Only locally: the key in your userscript manager. Your OC details are only held in memory while the travel page is open.</td></tr>
-    <tr><td class="value-strong">Data Sharing</td><td>Nobody. The key is sent only to api.torn.com.</td></tr>
+    <tr><td class="value-strong">Data Sharing</td><td>Nobody. The key is sent only to api.torn.com. Role weights are downloaded from tornprobability.com without sending anything about you.</td></tr>
     <tr><td class="value-strong">Purpose of Use</td><td>Personal: warning you before a trip that would delay your faction's OC.</td></tr>
     <tr><td class="value-strong">Key Storage &amp; Sharing</td><td>Stored / Used only for automation (one check when you open the travel page, then at most once a minute while it stays open).</td></tr>
     <tr><td class="value-strong">Key Access Level</td><td>Minimal, or Custom with only user → organizedcrime.</td></tr>
@@ -3049,10 +3050,10 @@ tbody tr:last-child td { border-bottom:0; }
    <p id="m-key-status" class="note" style="margin:10px 0 0"></p>
    <div class="table-scroll" style="max-height:none;margin-top:10px"><table class="tos-table" aria-label="Terms of service"><tbody>
     <tr><td class="value-strong">Data Storage</td><td>Only locally, and only once access is confirmed: key and settings in your userscript manager.</td></tr>
-    <tr><td class="value-strong">Data Sharing</td><td>Nobody. The key is sent only to api.torn.com.</td></tr>
+    <tr><td class="value-strong">Data Sharing</td><td>Nobody. The key is sent only to api.torn.com. Role weights are downloaded from tornprobability.com without sending anything about you.</td></tr>
     <tr><td class="value-strong">Purpose of Use</td><td>Public community tools: faction OC management.</td></tr>
-    <tr><td class="value-strong">Key Storage &amp; Sharing</td><td>Stored / Used only for automation (live refresh and breach checks).</td></tr>
-    <tr><td class="value-strong">Key Access Level</td><td>Custom: Minimal with faction API access (faction basic, members, crimes, positions; user basic, faction; torn items).</td></tr>
+    <tr><td class="value-strong">Key Storage &amp; Sharing</td><td>Stored / Used only for automation (live refresh, breach checks and the travel-page check).</td></tr>
+    <tr><td class="value-strong">Key Access Level</td><td>Custom: Minimal with faction API access (faction basic, members, crimes, positions; user basic, faction; torn items; user organizedcrime for the travel warning).</td></tr>
    </tbody></table></div></div>
   <p class="note" style="margin:0">Created by Eaglewing [571041].</p>
  </div></div>
@@ -3170,8 +3171,8 @@ tbody tr:last-child td { border-bottom:0; }
       <tr><td class="value-strong">Data Storage</td><td>Only locally: key, settings, hidden members, price caches and breach alert state in your userscript manager; the join audit history in this browser's storage. OC data is kept in memory only while the page is open.</td></tr>
       <tr><td class="value-strong">Data Sharing</td><td>Nobody. Role weights are downloaded from tornprobability.com without sending anything about you. If you turn on success chances (off by default), the name and slot pass rates of each OC (open slots as their minimum CPR) are sent to tornprobability.com (<a href="https://www.torn.com/forums.php#/p=threads&f=67&t=16449999" target="_blank" rel="noopener noreferrer">Allenone's Torn Probability</a>). No names, IDs or API key are sent.</td></tr>
       <tr><td class="value-strong">Purpose of Use</td><td>Non malicious statistical analysis and public community tools: faction OC management and item cost audit.</td></tr>
-      <tr><td class="value-strong">Key Storage &amp; Sharing</td><td>Stored / Used only for automation: stored locally, used for the automatic live refresh and breach checks, sent only to api.torn.com.</td></tr>
-      <tr><td class="value-strong">Key Access Level</td><td>Custom: Minimal with faction API access. Selections: faction basic, members, crimes, positions; user basic, faction; torn items.</td></tr>
+      <tr><td class="value-strong">Key Storage &amp; Sharing</td><td>Stored / Used only for automation: stored locally, used for the automatic live refresh, breach checks and the travel-page check, sent only to api.torn.com.</td></tr>
+      <tr><td class="value-strong">Key Access Level</td><td>Custom: Minimal with faction API access. Selections: faction basic, members, crimes, positions; user basic, faction; torn items; user organizedcrime (travel warning).</td></tr>
      </tbody></table></div></div>
     <div class="settings-card section-card"><div class="eyebrow">Live overview</div><h2>Warnings and refresh</h2><p>Thresholds for the live overview. The live view refreshes from the Torn API at most once a minute, only while it is open or the crimes-tab summary is visible.</p>
      <div class="row"><label class="number-label"><input id="set-inactive" type="number" min="1" max="2000" step="1"> Inactive after (hours since last action)</label></div>
